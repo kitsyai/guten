@@ -1,0 +1,9 @@
+version: 1
+project:
+  name: guten
+profiles:
+  default: local
+envMapping:
+  convention: SCREAMING_SNAKE
+public:
+  promote: []
