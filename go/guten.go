@@ -1,38 +1,43 @@
 // Package guten is a multi-format templating engine. It compiles named
-// templates written in Liquid and renders them with caller-supplied data into
-// one or more output parts (for example: subject, html, text).
+// templates and renders them with caller-supplied data into one or more output
+// parts (for example: subject, html, text).
 //
 // Scope and non-scope
 //
 //	guten owns rendering only. It has no knowledge of channels, delivery,
 //	recipients, PII, or any business domain. It does not know about email vs
 //	SMS, about kitsy/heypkv/boss, or about what a template "means". A caller
-//	(such as the gustav comms product) registers templates, passes data, and
-//	gets rendered parts back; everything downstream — choosing a channel,
-//	delivering, tracking status — is the caller's concern.
+//	(such as the gustav comms product, or a billing service generating invoice
+//	PDFs) registers templates, passes data, and gets rendered parts back.
 //
-// Liquid
+// Pluggable engines
 //
-//	Templates are Liquid (https://shopify.github.io/liquid). Liquid is chosen
-//	because it has mature, independent implementations in both Go
-//	(github.com/osteele/liquid) and JavaScript (liquidjs), so the same template
-//	renders the same way in guten's Go and Node runtimes, and because it is
-//	designed to safely render user-authored templates.
+//	The templating engine is a pluggable Renderer (see renderer.go). guten ships
+//	a Liquid renderer today; future renderers — a layout / "Canva-like" html-css
+//	designer, MJML, a WYSIWYG invoice template — implement the same Renderer
+//	interface and are added with Engine.RegisterRenderer, with no change to
+//	callers or to the template model. A Template names its renderer
+//	(Template.Renderer); empty means the Engine's default (Liquid).
+//
+// Configuration
+//
+//	Configuration flows through cnos only — guten never reads process
+//	environment variables. The cnos runtime (cnos-go) resolves the `guten.*`
+//	value namespace with its own layering/superposition; code Defaults() apply
+//	when a value is absent. See config.go.
 //
 // Security note
 //
-//	Liquid does not HTML-escape interpolated data by default. For HTML parts
-//	fed with untrusted data, escape in the template with the `escape` filter,
-//	e.g. {{ body | escape }}. Codes/URLs you generate yourself can be left
-//	unescaped. A future guten option may enforce auto-escaping per part.
+//	The Liquid renderer does not HTML-escape interpolated data by default. For
+//	html parts fed with untrusted data, escape in the template with the `escape`
+//	filter, e.g. {{ body | escape }}. Values you generate yourself (codes,
+//	signed URLs) can be left unescaped.
 package guten
 
 import (
 	"fmt"
 	"sort"
 	"sync"
-
-	"github.com/osteele/liquid"
 )
 
 // Conventional part names. They are conventions, not constraints: a template
@@ -44,10 +49,13 @@ const (
 	PartText    = "text"
 )
 
-// Template is a named bundle of Liquid sources keyed by output part.
+// Template is a named bundle of template sources keyed by output part. Renderer
+// selects the templating engine (empty => the Engine's default). The json tags
+// support templates-as-config (see config.go).
 type Template struct {
-	Name  string
-	Parts map[string]string
+	Name     string            `json:"name"`
+	Renderer string            `json:"renderer,omitempty"`
+	Parts    map[string]string `json:"parts"`
 }
 
 // Rendered is the result of rendering a Template with a data set.
@@ -56,27 +64,56 @@ type Rendered struct {
 	Parts    map[string]string
 }
 
-// Engine compiles templates once at registration and renders them on demand.
-// An Engine is safe for concurrent Render/RenderPart calls; Register takes a
-// write lock, so registration and rendering may also run concurrently.
-type Engine struct {
-	lq    *liquid.Engine
-	mu    sync.RWMutex
-	tmpls map[string]map[string]*liquid.Template
+// storedTemplate is a compiled template plus the renderer that produced it.
+type storedTemplate struct {
+	renderer string
+	parts    map[string]CompiledTemplate
 }
 
-// New returns an empty Engine with the standard Liquid filter/tag set.
+// Engine compiles templates once at registration and renders them on demand.
+// It owns a set of pluggable renderers and a set of compiled templates. An
+// Engine is safe for concurrent use.
+type Engine struct {
+	mu              sync.RWMutex
+	renderers       map[string]Renderer
+	defaultRenderer string
+	tmpls           map[string]storedTemplate
+}
+
+// New returns an Engine with the built-in Liquid renderer registered.
 func New() *Engine {
-	return &Engine{
-		lq:    liquid.NewEngine(),
-		tmpls: make(map[string]map[string]*liquid.Template),
+	e := &Engine{
+		renderers:       make(map[string]Renderer),
+		defaultRenderer: DefaultRenderer,
+		tmpls:           make(map[string]storedTemplate),
 	}
+	e.RegisterRenderer(NewLiquidRenderer())
+	return e
+}
+
+// RegisterRenderer adds (or replaces) a pluggable templating engine. This is
+// the extension point for future engines (layout/html-css, MJML, designer).
+func (e *Engine) RegisterRenderer(r Renderer) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.renderers[r.Name()] = r
+}
+
+// SetDefaultRenderer chooses the renderer used by templates that don't name
+// one. The renderer must already be registered.
+func (e *Engine) SetDefaultRenderer(name string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if _, ok := e.renderers[name]; !ok {
+		return fmt.Errorf("guten: renderer %q not registered", name)
+	}
+	e.defaultRenderer = name
+	return nil
 }
 
 // Register compiles and stores a template, replacing any existing template of
-// the same name. It fails fast if the name is empty, no parts are supplied, or
-// any part fails to parse — so a bad template is caught at registration time,
-// not at send time.
+// the same name. It fails fast: empty name, no parts, an unknown renderer, or
+// a part that fails to parse are all caught here, not at send time.
 func (e *Engine) Register(t Template) error {
 	if t.Name == "" {
 		return fmt.Errorf("guten: empty template name")
@@ -84,16 +121,26 @@ func (e *Engine) Register(t Template) error {
 	if len(t.Parts) == 0 {
 		return fmt.Errorf("guten: template %q has no parts", t.Name)
 	}
-	compiled := make(map[string]*liquid.Template, len(t.Parts))
+	e.mu.RLock()
+	rendererName := t.Renderer
+	if rendererName == "" {
+		rendererName = e.defaultRenderer
+	}
+	r, ok := e.renderers[rendererName]
+	e.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("guten: template %q uses unknown renderer %q", t.Name, rendererName)
+	}
+	parts := make(map[string]CompiledTemplate, len(t.Parts))
 	for part, src := range t.Parts {
-		tpl, err := e.lq.ParseString(src)
+		c, err := r.Compile(src)
 		if err != nil {
-			return fmt.Errorf("guten: parse template %q part %q: %w", t.Name, part, err)
+			return fmt.Errorf("guten: parse template %q part %q (%s): %w", t.Name, part, rendererName, err)
 		}
-		compiled[part] = tpl
+		parts[part] = c
 	}
 	e.mu.Lock()
-	e.tmpls[t.Name] = compiled
+	e.tmpls[t.Name] = storedTemplate{renderer: rendererName, parts: parts}
 	e.mu.Unlock()
 	return nil
 }
@@ -101,19 +148,18 @@ func (e *Engine) Register(t Template) error {
 // Render renders every part of the named template with data.
 func (e *Engine) Render(name string, data map[string]any) (Rendered, error) {
 	e.mu.RLock()
-	parts, ok := e.tmpls[name]
+	st, ok := e.tmpls[name]
 	e.mu.RUnlock()
 	if !ok {
 		return Rendered{}, fmt.Errorf("guten: template %q not registered", name)
 	}
-	bindings := toBindings(data)
-	out := Rendered{Template: name, Parts: make(map[string]string, len(parts))}
-	for part, tpl := range parts {
-		b, err := tpl.Render(bindings)
+	out := Rendered{Template: name, Parts: make(map[string]string, len(st.parts))}
+	for part, c := range st.parts {
+		s, err := c.Render(data)
 		if err != nil {
 			return Rendered{}, fmt.Errorf("guten: render template %q part %q: %w", name, part, err)
 		}
-		out.Parts[part] = string(b)
+		out.Parts[part] = s
 	}
 	return out, nil
 }
@@ -122,36 +168,47 @@ func (e *Engine) Render(name string, data map[string]any) (Rendered, error) {
 // needs only one part (e.g. SMS needs only "text").
 func (e *Engine) RenderPart(name, part string, data map[string]any) (string, error) {
 	e.mu.RLock()
-	parts, ok := e.tmpls[name]
+	st, ok := e.tmpls[name]
 	e.mu.RUnlock()
 	if !ok {
 		return "", fmt.Errorf("guten: template %q not registered", name)
 	}
-	tpl, ok := parts[part]
+	c, ok := st.parts[part]
 	if !ok {
 		return "", fmt.Errorf("guten: template %q has no part %q", name, part)
 	}
-	b, err := tpl.Render(toBindings(data))
+	s, err := c.Render(data)
 	if err != nil {
 		return "", fmt.Errorf("guten: render template %q part %q: %w", name, part, err)
 	}
-	return string(b), nil
+	return s, nil
 }
 
 // Templates lists the registered template names, sorted, for diagnostics.
 func (e *Engine) Templates() []string {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	names := make([]string, 0, len(e.tmpls))
-	for n := range e.tmpls {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
+	return sortedKeys(e.tmpls)
 }
 
-// toBindings copies data into the map[string]interface{} shape osteele/liquid
-// expects. We copy rather than cast so a caller's map can't be mutated.
+// Renderers lists the registered renderer names, sorted.
+func (e *Engine) Renderers() []string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return sortedKeys(e.renderers)
+}
+
+func sortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// toBindings copies data into the map[string]interface{} shape renderers
+// expect. We copy rather than cast so a caller's map can't be mutated.
 func toBindings(data map[string]any) map[string]interface{} {
 	b := make(map[string]interface{}, len(data))
 	for k, v := range data {

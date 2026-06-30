@@ -1,0 +1,3 @@
+guten:
+  default_renderer: liquid
+  templates: []
