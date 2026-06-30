@@ -2,8 +2,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/kitsyai/cnos/packages/go v1.11.4 h1:Z+NJ10Y9DplA5iXC4+ew3+QveCCkd9AAjw7n7NG+tys=
-github.com/kitsyai/cnos/packages/go v1.11.4/go.mod h1:hZvQ3qu6RdckoE7OzZcqKM05MBT4APEZwYSw0qRHCuM=
+github.com/kitsyai/cnos/packages/go v1.12.0 h1:uWyxfLZQ5qkh607cjrHGJbf+zdNFhtDZJHpKIKHCZq0=
+github.com/kitsyai/cnos/packages/go v1.12.0/go.mod h1:hZvQ3qu6RdckoE7OzZcqKM05MBT4APEZwYSw0qRHCuM=
 github.com/osteele/liquid v1.8.1 h1:b+uxMOkD1OOLxueaSvrE0yx6nMqf023DZPPAjPWT5eI=
 github.com/osteele/liquid v1.8.1/go.mod h1:SFqQ9ddbCoKceuG6RckCLJ0hcxUbGhLpvcXJGmHlCWA=
 github.com/osteele/tuesday v1.0.4 h1:iX0xOLW08/FJtXUCr20ngYwOwBE6l/mf7mz8NIv4yl8=

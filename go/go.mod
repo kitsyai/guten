@@ -3,7 +3,7 @@ module github.com/kitsyai/guten/go
 go 1.26
 
 require (
-	github.com/kitsyai/cnos/packages/go v1.11.4
+	github.com/kitsyai/cnos/packages/go v1.12.0
 	github.com/osteele/liquid v1.8.1
 )
 
