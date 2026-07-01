@@ -13,9 +13,9 @@ data, and get rendered parts back.
 ## Pluggable engines
 
 The templating engine is a pluggable **`Renderer`** (`go/renderer.go`). guten
-ships a **Liquid** renderer today; future engines — a layout / "Canva-like"
-html-css designer where users build beautiful invoices/emails with images and
-colours, an MJML compiler, a WYSIWYG builder — implement the same `Renderer`
+ships a **Liquid** renderer and a **layout** ("Canva-like" block) renderer for
+building invoices/emails from headings, paragraphs, buttons, and images; future
+engines — an MJML compiler, a WYSIWYG builder — implement the same `Renderer`
 interface and register with `Engine.RegisterRenderer`. Nothing about the
 template model, the `Engine` API, or callers changes when a new engine is added.
 A `Template` names its renderer (`Template.Renderer`); empty means the engine's
@@ -44,14 +44,16 @@ both runtimes assert against it.
 ## Output formats
 
 - **v0:** `html`, `text` (and any caller-defined part — `subject`, `sms`, …).
-- **Roadmap:** `pdf` (via an HTML → PDF step over the rendered `html` part).
+- **PDF:** `RenderToPDF` / `renderToPdf` render the `html` part and hand it to an
+  injectable `PDFConverter`. HTML → PDF needs a browser engine (chromedp /
+  puppeteer), which the consumer wires — keeping guten's core pure and offline.
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
 | `go/` | Go module: the engine + batteries-included templates. |
-| `js/` | Node/browser runtime (planned). |
+| `js/` | Node/browser runtime (npm `@kitsyai/guten`). |
 | `templates/` | Batteries-included template sources. |
 | `spec/` | Template + `template_data` manifest schema. |
 | `docs/` | Usage and design notes. |

@@ -44,10 +44,19 @@ golden from the Go reference with:
 GUTEN_CORPUS_WRITE=1 go -C ../go test -run TestCorpusParity
 ```
 
-## Roadmap
+## Renderers
 
-- **PDF output** (HTML → PDF over the rendered `html` part)
-- **layout / Canva-like** pluggable renderer (a second `Renderer` beside Liquid)
+- **Liquid** (default) — via liquidjs.
+- **Layout** — `LayoutRenderer`: a JSON block layout (heading / paragraph /
+  button / image) → HTML, the seam for a "Canva-like" designer. Byte-identical
+  to the Go layout renderer (covered by the parity corpus).
+
+## PDF
+
+`renderToPdf(engine, name, data, converter)` renders the `html` part and hands
+it to an injectable `PdfConverter`. HTML → PDF needs a browser engine
+(puppeteer / headless Chromium), wired by the consumer — keeping guten pure and
+offline-first.
 
 ## Dev
 

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { Engine, type Template } from "../src/index.js";
+import { Engine, LayoutRenderer, type Template } from "../src/index.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const corpusDir = join(here, "..", "..", "spec", "corpus");
@@ -24,6 +24,7 @@ describe("Liquid parity (Go golden)", () => {
   for (const c of cases) {
     it(`case ${c.name} matches Go`, () => {
       const e = new Engine();
+      e.registerRenderer(new LayoutRenderer());
       e.register(c.template);
       const r = e.render(c.template.name, c.data);
       expect(r.parts).toEqual(expected[c.name]);

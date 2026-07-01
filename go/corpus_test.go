@@ -34,6 +34,7 @@ func renderCorpus(t *testing.T, cases []corpusCase) map[string]map[string]string
 	out := make(map[string]map[string]string, len(cases))
 	for _, c := range cases {
 		e := New()
+		e.RegisterRenderer(NewLayoutRenderer())
 		if err := e.Register(c.Template); err != nil {
 			t.Fatalf("register %s: %v", c.Name, err)
 		}

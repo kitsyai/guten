@@ -11,6 +11,9 @@
   "interpolation": {
     "text": "Hello Ada!"
   },
+  "layout_block": {
+    "html": "\u003cdiv class=\"guten-layout\"\u003e\n\u003ch1 class=\"guten-heading\" style=\"color:#0ea5e9\"\u003eSale\u003c/h1\u003e\n\u003cp class=\"guten-paragraph\"\u003eHi Ada\u003c/p\u003e\n\u003ca class=\"guten-button\" href=\"https://x.test\" style=\"background:#0ea5e9\"\u003eOpen\u003c/a\u003e\n\u003c/div\u003e"
+  },
   "loop": {
     "text": "1,2,3,"
   },

@@ -28,5 +28,16 @@
     "name": "upcase_filter",
     "template": { "name": "upcase_filter", "parts": { "text": "{{ word | upcase }}" } },
     "data": { "word": "hello" }
+  },
+  {
+    "name": "layout_block",
+    "template": {
+      "name": "layout_block",
+      "renderer": "layout",
+      "parts": {
+        "html": "{\"style\":{\"accent\":\"#0ea5e9\"},\"blocks\":[{\"type\":\"heading\",\"text\":\"{{ title }}\"},{\"type\":\"paragraph\",\"text\":\"Hi {{ name }}\"},{\"type\":\"button\",\"text\":\"Open\",\"url\":\"{{ url }}\"}]}"
+      }
+    },
+    "data": { "title": "Sale", "name": "Ada", "url": "https://x.test" }
   }
 ]
