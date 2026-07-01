@@ -1,0 +1,20 @@
+{
+  "conditional": {
+    "text": "VIP Sam"
+  },
+  "default_filter": {
+    "text": "Hi there"
+  },
+  "escape": {
+    "html": "\u003cp\u003e\u0026lt;b\u0026gt;x\u0026lt;/b\u0026gt; \u0026amp; y\u003c/p\u003e"
+  },
+  "interpolation": {
+    "text": "Hello Ada!"
+  },
+  "loop": {
+    "text": "1,2,3,"
+  },
+  "upcase_filter": {
+    "text": "HELLO"
+  }
+}

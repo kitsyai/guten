@@ -33,12 +33,13 @@ templates, not just the batteries-included ones.
 
 | Runtime | Status | Path |
 | --- | --- | --- |
-| Go | **v0 — working** | [`go/`](go) (module `github.com/kitsyai/guten/go`) |
-| Node + browser | planned | `js/` |
+| Go | **v0.1 — working** | [`go/`](go) (module `github.com/kitsyai/guten/go`) |
+| Node + browser | **v0.1 — working** | [`js/`](js) (npm `@kitsyai/guten`) |
 
-A shared [`spec/`](spec) defines the template + data manifest, and a parity test
-corpus (planned) guarantees Go and JS produce identical output for the same
-template + data.
+A shared [`spec/`](spec) defines the template + data manifest, and a **parity
+corpus** ([`spec/corpus/`](spec/corpus)) guarantees Go and JS produce identical
+output for the same template + data — the Go reference generates the golden, and
+both runtimes assert against it.
 
 ## Output formats
 

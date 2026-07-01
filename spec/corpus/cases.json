@@ -1,0 +1,32 @@
+[
+  {
+    "name": "interpolation",
+    "template": { "name": "interpolation", "parts": { "text": "Hello {{ name }}!" } },
+    "data": { "name": "Ada" }
+  },
+  {
+    "name": "default_filter",
+    "template": { "name": "default_filter", "parts": { "text": "Hi {{ name | default: \"there\" }}" } },
+    "data": {}
+  },
+  {
+    "name": "conditional",
+    "template": { "name": "conditional", "parts": { "text": "{% if vip %}VIP {% endif %}{{ name }}" } },
+    "data": { "name": "Sam", "vip": true }
+  },
+  {
+    "name": "escape",
+    "template": { "name": "escape", "parts": { "html": "<p>{{ body | escape }}</p>" } },
+    "data": { "body": "<b>x</b> & y" }
+  },
+  {
+    "name": "loop",
+    "template": { "name": "loop", "parts": { "text": "{% for i in items %}{{ i }},{% endfor %}" } },
+    "data": { "items": [1, 2, 3] }
+  },
+  {
+    "name": "upcase_filter",
+    "template": { "name": "upcase_filter", "parts": { "text": "{{ word | upcase }}" } },
+    "data": { "word": "hello" }
+  }
+]
