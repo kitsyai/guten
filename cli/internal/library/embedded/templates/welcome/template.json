@@ -1,0 +1,11 @@
+{
+  "name": "welcome",
+  "kind": "email",
+  "renderer": "liquid",
+  "description": "Welcome / onboarding email with a call-to-action button.",
+  "parts": {
+    "subject": "{{ subject | default: \"Welcome aboard\" }}",
+    "html": "@html.liquid",
+    "text": "@text.liquid"
+  }
+}

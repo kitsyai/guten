@@ -41,6 +41,25 @@ guten export -t @invoice.html -d @data.json --css @brand.css -o out.pdf
 - `--css @file|"…"` — extra CSS injected before `</head>` so it wins the cascade
   (repeatable). Great for `@font-face`, layout tweaks, or hiding blocks.
 
+## Template library
+
+The CLI resolves `--lib <name>` across a Maven/Gradle-style chain (highest
+first): `--lib-dir <dir>` → `~/.kitsy/guten/user/templates/` →
+`~/.kitsy/guten/gutenkit/templates/` (synced by `lib pull`) → an **embedded
+snapshot** baked into the binary (works offline).
+
+```
+guten lib list                 # what's available (+ source)
+guten lib show invoice         # manifest + sample data
+guten lib pull                 # sync latest from github.com/kitsyai/gutenkit
+guten export --lib invoice -d @data.json -o invoice.pdf
+guten export --lib welcome -d @data.json --set theme.accent_color=#0ea5e9 -o out.html
+```
+
+A bundle's `theme.json` is the lowest theme layer, overridable by
+`data.theme` → `--theme` → `--set`. Create your own under
+`~/.kitsy/guten/user/templates/<name>/` and use `"extends": "<base>"` to inherit.
+
 ## PDF
 
 `-o file.pdf` renders the `html` part and converts it with a **headless

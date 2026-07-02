@@ -1,0 +1,11 @@
+{
+  "brand_name": "Acme",
+  "name": "Asha",
+  "subject": "Welcome to Acme",
+  "heading": "Welcome aboard",
+  "body": "Your Acme account is ready — let's get you set up in a couple of minutes.",
+  "action_url": "https://acme.test/start",
+  "action_label": "Get started",
+  "closing": "Need help? Just reply to this email.",
+  "footer_text": "Acme Inc. · support@acme.test"
+}

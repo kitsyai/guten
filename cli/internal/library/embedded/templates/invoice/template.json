@@ -1,0 +1,7 @@
+{
+  "name": "invoice",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "GST tax invoice (India) — header, parties, line items, totals, dashed payment chit, terms footer.",
+  "parts": { "html": "@html.liquid" }
+}

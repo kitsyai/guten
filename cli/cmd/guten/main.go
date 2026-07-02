@@ -10,8 +10,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
+	"github.com/kitsyai/guten/cli/internal/library"
 	pdfconv "github.com/kitsyai/guten/cli/internal/pdf"
 	guten "github.com/kitsyai/guten/go"
 )
@@ -21,14 +23,17 @@ var version = "0.2.0"
 const usageText = `guten ` + `— templating engine CLI
 
 Usage:
-  guten render  -t <src|@file> [-r liquid|layout] [-d <json|@file>] [--part html]
-  guten export  -t <src|@file> [-r liquid|layout] [-d <json|@file>] -o <file> [-o <file> ...]
+  guten render  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] [--part html]
+  guten export  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] -o <file> [-o …]
+  guten lib     list | show <name> | pull        [--lib-dir <dir>]
   guten builtins
   guten version
 
 Flags:
+  --lib            template name from the library (embedded + ~/.kitsy/guten + --lib-dir)
+  --lib-dir        extra library directory to search first
   -t, --template   template source, or @path to a file
-      --manifest   @path to a full Template JSON {name, renderer, parts:{...}}
+      --manifest   @path to a full Template JSON {name, renderer, extends, parts:{...}}
   -r, --renderer   renderer: liquid (default) | layout
   -d, --data       render data as JSON, or @path to a JSON file
       --part       part to render for 'render'/stdout (default: html)
@@ -59,6 +64,8 @@ func main() {
 		err = cmdRender(os.Args[2:])
 	case "export":
 		err = cmdExport(os.Args[2:])
+	case "lib":
+		err = cmdLib(os.Args[2:])
 	case "builtins":
 		err = cmdBuiltins()
 	case "version", "--version", "-v":
@@ -78,6 +85,8 @@ func main() {
 type opts struct {
 	template string
 	manifest string
+	lib      string
+	libDir   string
 	renderer string
 	data     string
 	part     string
@@ -108,6 +117,10 @@ func parseOpts(args []string) (opts, error) {
 			o.template, err = next()
 		case "--manifest":
 			o.manifest, err = next()
+		case "--lib":
+			o.lib, err = next()
+		case "--lib-dir":
+			o.libDir, err = next()
 		case "-r", "--renderer":
 			o.renderer, err = next()
 		case "-d", "--data":
@@ -180,36 +193,62 @@ func loadData(s string) (map[string]any, error) {
 }
 
 // engineAndTemplate builds an engine (Liquid + layout renderers) and registers
-// the template from either --manifest or -t/--part, returning the template name.
-func engineAndTemplate(o opts) (*guten.Engine, string, error) {
+// the template from --lib, --manifest, or -t/--part. It returns the template
+// name and the bundle's default theme (nil unless --lib supplied one).
+func engineAndTemplate(o opts) (*guten.Engine, string, map[string]any, error) {
 	e := guten.New()
 	e.RegisterRenderer(guten.NewLayoutRenderer())
+	if o.lib != "" {
+		b, err := library.LoadBundle(o.lib, o.libDir)
+		if err != nil {
+			return nil, "", nil, err
+		}
+		if err := registerBundle(e, b, o.libDir); err != nil {
+			return nil, "", nil, err
+		}
+		return e, b.Template.Name, b.Theme, nil
+	}
 	if o.manifest != "" {
 		raw, err := loadArg(o.manifest)
 		if err != nil {
-			return nil, "", err
+			return nil, "", nil, err
 		}
 		var t guten.Template
 		if err := json.Unmarshal([]byte(raw), &t); err != nil {
-			return nil, "", fmt.Errorf("parse manifest: %w", err)
+			return nil, "", nil, fmt.Errorf("parse manifest: %w", err)
 		}
 		if err := e.Register(t); err != nil {
-			return nil, "", err
+			return nil, "", nil, err
 		}
-		return e, t.Name, nil
+		return e, t.Name, nil, nil
 	}
 	if o.template == "" {
-		return nil, "", fmt.Errorf("one of -t/--template or --manifest is required")
+		return nil, "", nil, fmt.Errorf("one of --lib, -t/--template, or --manifest is required")
 	}
 	src, err := loadArg(o.template)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, err
 	}
 	t := guten.Template{Name: "cli", Renderer: o.renderer, Parts: map[string]string{o.part: src}}
 	if err := e.Register(t); err != nil {
-		return nil, "", err
+		return nil, "", nil, err
 	}
-	return e, t.Name, nil
+	return e, t.Name, nil, nil
+}
+
+// registerBundle registers a bundle, first registering any base it extends
+// (resolved from the same library search path).
+func registerBundle(e *guten.Engine, b library.Bundle, libDir string) error {
+	if b.Template.Extends != "" {
+		base, err := library.LoadBundle(b.Template.Extends, libDir)
+		if err != nil {
+			return fmt.Errorf("load base %q: %w", b.Template.Extends, err)
+		}
+		if err := registerBundle(e, base, libDir); err != nil {
+			return err
+		}
+	}
+	return e.Register(b.Template)
 }
 
 func partForExt(path string) string {
@@ -225,11 +264,11 @@ func partForExt(path string) string {
 
 // runRender renders the requested part and returns it (testable core of render).
 func runRender(o opts) (string, error) {
-	e, name, err := engineAndTemplate(o)
+	e, name, baseTheme, err := engineAndTemplate(o)
 	if err != nil {
 		return "", err
 	}
-	data, err := renderData(o)
+	data, err := renderData(o, baseTheme)
 	if err != nil {
 		return "", err
 	}
@@ -243,12 +282,21 @@ func runRender(o opts) (string, error) {
 	return out, nil
 }
 
-// renderData builds the render data: base --data, then --theme merged under
-// "theme", then --set key=value overrides applied by dotted path.
-func renderData(o opts) (map[string]any, error) {
+// renderData builds the render data with theme layering (low -> high): the
+// bundle's default theme, then data.theme, then --theme, then --set overrides.
+func renderData(o opts, baseTheme map[string]any) (map[string]any, error) {
 	data, err := loadData(o.data)
 	if err != nil {
 		return nil, err
+	}
+	theme := map[string]any{}
+	for k, v := range baseTheme {
+		theme[k] = v
+	}
+	if dt, ok := data["theme"].(map[string]any); ok {
+		for k, v := range dt {
+			theme[k] = v
+		}
 	}
 	if o.theme != "" {
 		raw, err := loadArg(o.theme)
@@ -259,14 +307,12 @@ func renderData(o opts) (map[string]any, error) {
 		if err := json.Unmarshal([]byte(raw), &th); err != nil {
 			return nil, fmt.Errorf("parse theme: %w", err)
 		}
-		base, _ := data["theme"].(map[string]any)
-		if base == nil {
-			base = map[string]any{}
-		}
 		for k, v := range th {
-			base[k] = v
+			theme[k] = v
 		}
-		data["theme"] = base
+	}
+	if len(theme) > 0 {
+		data["theme"] = theme
 	}
 	for _, s := range o.sets {
 		k, v, ok := strings.Cut(s, "=")
@@ -375,11 +421,11 @@ func runExport(o opts) ([]string, error) {
 	if len(o.outs) == 0 {
 		return nil, fmt.Errorf("export requires at least one -o <file>")
 	}
-	e, name, err := engineAndTemplate(o)
+	e, name, baseTheme, err := engineAndTemplate(o)
 	if err != nil {
 		return nil, err
 	}
-	data, err := renderData(o)
+	data, err := renderData(o, baseTheme)
 	if err != nil {
 		return nil, err
 	}
@@ -442,4 +488,63 @@ func cmdBuiltins() error {
 		fmt.Println(name)
 	}
 	return nil
+}
+
+func cmdLib(args []string) error {
+	libDir := ""
+	var pos []string
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--lib-dir" && i+1 < len(args) {
+			i++
+			libDir = args[i]
+			continue
+		}
+		pos = append(pos, args[i])
+	}
+	if len(pos) == 0 {
+		return fmt.Errorf("usage: guten lib <list|show <name>|pull> [--lib-dir <dir>]")
+	}
+	switch pos[0] {
+	case "list":
+		for _, e := range library.List(libDir) {
+			fmt.Printf("%-14s %-9s %-9s %s\n", e.Name, e.Kind, e.Source, e.Description)
+		}
+		return nil
+	case "show":
+		if len(pos) < 2 {
+			return fmt.Errorf("usage: guten lib show <name>")
+		}
+		b, err := library.LoadBundle(pos[1], libDir)
+		if err != nil {
+			return err
+		}
+		renderer := b.Template.Renderer
+		if renderer == "" {
+			renderer = guten.RendererLiquid
+		}
+		fmt.Printf("name:     %s\nrenderer: %s\n", b.Template.Name, renderer)
+		if b.Template.Extends != "" {
+			fmt.Printf("extends:  %s\n", b.Template.Extends)
+		}
+		parts := make([]string, 0, len(b.Template.Parts))
+		for p := range b.Template.Parts {
+			parts = append(parts, p)
+		}
+		sort.Strings(parts)
+		fmt.Printf("parts:    %s\n", strings.Join(parts, ", "))
+		if len(b.Sample) > 0 {
+			s, _ := json.MarshalIndent(b.Sample, "", "  ")
+			fmt.Printf("sample:\n%s\n", s)
+		}
+		return nil
+	case "pull":
+		dir, err := library.Pull()
+		if err != nil {
+			return err
+		}
+		fmt.Println("pulled gutenkit to", dir)
+		return nil
+	default:
+		return fmt.Errorf("unknown lib subcommand %q (use list|show|pull)", pos[0])
+	}
 }

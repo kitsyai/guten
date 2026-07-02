@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "templates": [
+    { "name": "invoice", "kind": "document", "path": "templates/invoice", "description": "GST tax invoice (India)." },
+    { "name": "otp", "kind": "email", "path": "templates/otp", "description": "One-time passcode / verification email." },
+    { "name": "welcome", "kind": "email", "path": "templates/welcome", "description": "Welcome / onboarding email with a CTA." }
+  ]
+}

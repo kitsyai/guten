@@ -1,0 +1,8 @@
+{{ heading | default: "Welcome aboard" }}{% if name %}, {{ name }}{% endif %}!
+
+{{ body | default: "Your account is ready. We're glad to have you." }}
+{% if action_url %}
+{{ action_label | default: "Get started" }}: {{ action_url }}
+{% endif %}
+{{ closing | default: "Need help? Just reply to this email." }}
+{{ footer_text | default: brand_name }}

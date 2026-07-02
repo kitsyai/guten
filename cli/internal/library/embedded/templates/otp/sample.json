@@ -1,0 +1,9 @@
+{
+  "brand_name": "Acme",
+  "subject": "Your Acme verification code",
+  "heading": "Your verification code",
+  "purpose": "sign in",
+  "code": "483920",
+  "ttl_minutes": 10,
+  "footer_text": "Acme Inc. · support@acme.test"
+}

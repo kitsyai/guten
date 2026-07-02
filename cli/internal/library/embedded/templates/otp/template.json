@@ -1,0 +1,11 @@
+{
+  "name": "otp",
+  "kind": "email",
+  "renderer": "liquid",
+  "description": "One-time passcode / verification code email.",
+  "parts": {
+    "subject": "{{ subject | default: \"Your verification code\" }}",
+    "html": "@html.liquid",
+    "text": "@text.liquid"
+  }
+}

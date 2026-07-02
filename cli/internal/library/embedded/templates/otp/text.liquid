@@ -1,0 +1,7 @@
+{{ heading | default: "Your verification code" }}
+
+Code: {{ code }}
+This code expires in {{ ttl_minutes | default: 10 }} minutes.
+
+Didn't request this? You can safely ignore this email.
+{{ footer_text | default: brand_name }}
