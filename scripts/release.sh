@@ -38,6 +38,13 @@ git fetch --quiet origin main
 [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] || die "behind origin/main — git pull first"
 info "on main, clean, up to date ✓"
 
+for t in "go/v${NEW}" "cli/v${NEW}" "js/v${NEW}"; do
+  if git rev-parse -q --verify "refs/tags/${t}" >/dev/null 2>&1 || git ls-remote --tags origin "${t}" | grep -q "refs/tags/${t}"; then
+    die "tag ${t} already exists — bump to a new version"
+  fi
+done
+info "tags go/cli/js v${NEW} are free ✓"
+
 step "Tests"
 if [[ "$SKIP_TESTS" == false ]]; then
   ( cd go && go test ./... >/dev/null ) && info "go ✓"

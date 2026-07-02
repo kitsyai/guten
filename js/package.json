@@ -1,6 +1,6 @@
 {
   "name": "@kitsy/guten",
-  "version": ",
+  "version": "0.2.1",
   "description": "Multi-format, multi-runtime templating engine (Liquid) — Node + browser. The JS runtime of kitsyai/guten.",
   "license": "MIT",
   "type": "module",

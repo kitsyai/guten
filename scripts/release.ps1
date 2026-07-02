@@ -96,7 +96,7 @@ for ($i = 0; $i -lt $ScriptArgs.Length; $i++) {
         "--no-tag" { $noTag = $true; continue }
         "-h" { Usage; exit 0 }
         "--help" { Usage; exit 0 }
-        { $_ -like "-" } { Die "unknown option: $($_)" }
+        { $_ -like "-*" } { Die "unknown option: $($_)" }
         default {
             if ($null -ne $newVersion) {
                 Die "unexpected argument: $($ScriptArgs[$i])"
@@ -143,6 +143,12 @@ if ((git rev-parse HEAD).Trim() -ne (git rev-parse origin/main).Trim()) {
 }
 Show-Info "on main, clean, up to date"
 
+foreach ($t in @("go/v$newVersion", "cli/v$newVersion", "js/v$newVersion")) {
+    if (git tag --list $t) { Die "tag $t already exists locally (bump to a new version)" }
+    if (git ls-remote --tags origin $t) { Die "tag $t already exists on origin (bump to a new version)" }
+}
+Show-Info "tags go/cli/js v$newVersion are free"
+
 Show-Step "Tests"
 if (-not $skipTests) {
     Invoke-Checked -Command "go" -Arguments @("test", "./...") -WorkingDirectory (Join-Path $root "go")
@@ -158,18 +164,19 @@ if (-not $skipTests) {
 }
 
 Show-Step "Bump versions (-> $newVersion)"
-$newPackageJsonText = Replace-FirstMatch -InputText $packageJsonText -Pattern '"version"\s*:\s*"[^\"]+"' -Replacement '"version": "' + $newVersion + '"'
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$newPackageJsonText = Replace-FirstMatch -InputText $packageJsonText -Pattern '"version"\s*:\s*"[^"]+"' -Replacement ('"version": "' + $newVersion + '"')
 if ($null -eq $newPackageJsonText) {
     Die "cannot update version in js/package.json"
 }
-Set-Content -Path $jsPackagePath -Value $newPackageJsonText -NoNewline
+[System.IO.File]::WriteAllText($jsPackagePath, $newPackageJsonText, $utf8NoBom)
 
 $cliText = Get-Content -Raw $cliMainPath
-$newCliText = Replace-FirstMatch -InputText $cliText -Pattern 'var version = "[^"]+"' -Replacement 'var version = "' + $newVersion + '"'
+$newCliText = Replace-FirstMatch -InputText $cliText -Pattern 'var version = "[^"]+"' -Replacement ('var version = "' + $newVersion + '"')
 if ($null -eq $newCliText) {
     Die "cannot update version in cli/cmd/guten/main.go"
 }
-Set-Content -Path $cliMainPath -Value $newCliText -NoNewline
+[System.IO.File]::WriteAllText($cliMainPath, $newCliText, $utf8NoBom)
 
 Show-Info "js/package.json + cli/cmd/guten/main.go"
 
