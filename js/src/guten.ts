@@ -9,6 +9,9 @@ import {
 export interface Template {
   name: string;
   renderer?: string;
+  /** Name of an already-registered template to inherit from: this template's
+   * parts overlay the base's (per-part). Cross-runtime safe (engine-resolved). */
+  extends?: string;
   parts: Record<string, string>;
 }
 
@@ -36,6 +39,7 @@ export class Engine {
   private renderersByName = new Map<string, Renderer>();
   private defaultRenderer = DefaultRenderer;
   private tmpls = new Map<string, StoredTemplate>();
+  private raw = new Map<string, Template>();
 
   constructor() {
     this.registerRenderer(new LiquidRenderer());
@@ -54,11 +58,23 @@ export class Engine {
 
   register(t: Template): void {
     if (!t.name) throw new Error("guten: empty template name");
-    const parts = t.parts ?? {};
+    // Resolve inheritance: overlay the base template's parts with this one's.
+    let renderer = t.renderer;
+    let parts: Record<string, string> = t.parts ?? {};
+    if (t.extends) {
+      const base = this.raw.get(t.extends);
+      if (!base) {
+        throw new Error(
+          `guten: template ${JSON.stringify(t.name)} extends unknown template ${JSON.stringify(t.extends)}`,
+        );
+      }
+      parts = { ...(base.parts ?? {}), ...(t.parts ?? {}) };
+      renderer = renderer || base.renderer;
+    }
     if (Object.keys(parts).length === 0) {
       throw new Error(`guten: template ${JSON.stringify(t.name)} has no parts`);
     }
-    const rendererName = t.renderer || this.defaultRenderer;
+    const rendererName = renderer || this.defaultRenderer;
     const r = this.renderersByName.get(rendererName);
     if (!r) {
       throw new Error(
@@ -76,6 +92,7 @@ export class Engine {
       }
     }
     this.tmpls.set(t.name, { renderer: rendererName, parts: compiled });
+    this.raw.set(t.name, { name: t.name, renderer: rendererName, parts });
   }
 
   render(name: string, data: Record<string, unknown> = {}): Rendered {

@@ -53,9 +53,14 @@ const (
 // selects the templating engine (empty => the Engine's default). The json tags
 // support templates-as-config (see config.go).
 type Template struct {
-	Name     string            `json:"name"`
-	Renderer string            `json:"renderer,omitempty"`
-	Parts    map[string]string `json:"parts"`
+	Name     string `json:"name"`
+	Renderer string `json:"renderer,omitempty"`
+	// Extends names an already-registered template to inherit from: this
+	// template's parts overlay the base's (per-part; this template wins).
+	// Cross-runtime safe — resolved by the engine, not by engine-specific
+	// Liquid layout tags.
+	Extends string            `json:"extends,omitempty"`
+	Parts   map[string]string `json:"parts"`
 }
 
 // Rendered is the result of rendering a Template with a data set.
@@ -78,6 +83,7 @@ type Engine struct {
 	renderers       map[string]Renderer
 	defaultRenderer string
 	tmpls           map[string]storedTemplate
+	raw             map[string]Template // extends-resolved sources, for further inheritance
 }
 
 // New returns an Engine with the built-in Liquid renderer registered.
@@ -86,6 +92,7 @@ func New() *Engine {
 		renderers:       make(map[string]Renderer),
 		defaultRenderer: DefaultRenderer,
 		tmpls:           make(map[string]storedTemplate),
+		raw:             make(map[string]Template),
 	}
 	e.RegisterRenderer(NewLiquidRenderer())
 	return e
@@ -118,11 +125,34 @@ func (e *Engine) Register(t Template) error {
 	if t.Name == "" {
 		return fmt.Errorf("guten: empty template name")
 	}
-	if len(t.Parts) == 0 {
+	// Resolve inheritance: overlay the base template's parts with this one's
+	// (per-part; this template wins). The base must already be registered.
+	resolved := t
+	if t.Extends != "" {
+		e.mu.RLock()
+		base, ok := e.raw[t.Extends]
+		e.mu.RUnlock()
+		if !ok {
+			return fmt.Errorf("guten: template %q extends unknown template %q", t.Name, t.Extends)
+		}
+		merged := make(map[string]string, len(base.Parts)+len(t.Parts))
+		for part, src := range base.Parts {
+			merged[part] = src
+		}
+		for part, src := range t.Parts {
+			merged[part] = src
+		}
+		renderer := t.Renderer
+		if renderer == "" {
+			renderer = base.Renderer
+		}
+		resolved = Template{Name: t.Name, Renderer: renderer, Parts: merged}
+	}
+	if len(resolved.Parts) == 0 {
 		return fmt.Errorf("guten: template %q has no parts", t.Name)
 	}
 	e.mu.RLock()
-	rendererName := t.Renderer
+	rendererName := resolved.Renderer
 	if rendererName == "" {
 		rendererName = e.defaultRenderer
 	}
@@ -131,8 +161,8 @@ func (e *Engine) Register(t Template) error {
 	if !ok {
 		return fmt.Errorf("guten: template %q uses unknown renderer %q", t.Name, rendererName)
 	}
-	parts := make(map[string]CompiledTemplate, len(t.Parts))
-	for part, src := range t.Parts {
+	parts := make(map[string]CompiledTemplate, len(resolved.Parts))
+	for part, src := range resolved.Parts {
 		c, err := r.Compile(src)
 		if err != nil {
 			return fmt.Errorf("guten: parse template %q part %q (%s): %w", t.Name, part, rendererName, err)
@@ -141,6 +171,7 @@ func (e *Engine) Register(t Template) error {
 	}
 	e.mu.Lock()
 	e.tmpls[t.Name] = storedTemplate{renderer: rendererName, parts: parts}
+	e.raw[t.Name] = resolved
 	e.mu.Unlock()
 	return nil
 }

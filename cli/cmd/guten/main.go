@@ -37,6 +37,9 @@ Flags:
       --theme      @file|JSON merged into the data under "theme" (fonts/colors/…)
       --set        key=value override into the data (repeatable), e.g. theme.accent=#0ea5e9
       --css        extra CSS (@file or literal) injected before </head> to override styling (repeatable)
+      --header     fill data.slots.header (@file or literal) for inheritance-aware templates
+      --footer     fill data.slots.footer (@file or literal)
+      --slot       name=<src|@file> fill data.slots.<name> (repeatable)
       --chrome     Chrome/Edge/Chromium path for PDF (else auto-detected; env GUTEN_CHROME)
 
 Examples:
@@ -83,6 +86,9 @@ type opts struct {
 	theme    string
 	sets     []string
 	css      []string
+	header   string
+	footer   string
+	slots    []string
 }
 
 func parseOpts(args []string) (opts, error) {
@@ -124,6 +130,15 @@ func parseOpts(args []string) (opts, error) {
 			var v string
 			if v, err = next(); err == nil {
 				o.css = append(o.css, v)
+			}
+		case "--header":
+			o.header, err = next()
+		case "--footer":
+			o.footer, err = next()
+		case "--slot":
+			var v string
+			if v, err = next(); err == nil {
+				o.slots = append(o.slots, v)
 			}
 		case "--chrome":
 			o.chrome, err = next()
@@ -259,6 +274,44 @@ func renderData(o opts) (map[string]any, error) {
 			return nil, fmt.Errorf("--set expects key=value, got %q", s)
 		}
 		setPath(data, strings.TrimSpace(k), v)
+	}
+	// Slots: --header/--footer/--slot name=<src|@file> fill data.slots.* which
+	// inheritance-aware templates render as {{ slots.<name> | default: ... }}.
+	slots := map[string]any{}
+	if o.header != "" {
+		v, err := loadArg(o.header)
+		if err != nil {
+			return nil, err
+		}
+		slots["header"] = v
+	}
+	if o.footer != "" {
+		v, err := loadArg(o.footer)
+		if err != nil {
+			return nil, err
+		}
+		slots["footer"] = v
+	}
+	for _, s := range o.slots {
+		k, v, ok := strings.Cut(s, "=")
+		if !ok {
+			return nil, fmt.Errorf("--slot expects name=value, got %q", s)
+		}
+		val, err := loadArg(v)
+		if err != nil {
+			return nil, err
+		}
+		slots[strings.TrimSpace(k)] = val
+	}
+	if len(slots) > 0 {
+		base, _ := data["slots"].(map[string]any)
+		if base == nil {
+			base = map[string]any{}
+		}
+		for k, v := range slots {
+			base[k] = v
+		}
+		data["slots"] = base
 	}
 	return data, nil
 }
