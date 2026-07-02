@@ -1,2 +1,6 @@
+# pnpm 10+/11 reads build-approval settings here (not the package.json "pnpm"
+# field). esbuild (a tsup/vitest dependency) ships a prebuilt platform binary and
+# its build script is safe; approving it lets `pnpm install` / `pnpm build`
+# proceed instead of failing on the ignored-builds gate.
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true

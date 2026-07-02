@@ -37,10 +37,5 @@
     "type": "git",
     "url": "https://github.com/kitsyai/guten",
     "directory": "js"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
