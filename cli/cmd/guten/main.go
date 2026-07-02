@@ -165,14 +165,17 @@ func parseOpts(args []string) (opts, error) {
 	return o, nil
 }
 
-// loadArg returns s, or the contents of the file when s begins with '@'.
+// loadArg returns s, or the contents of the file when s begins with '@'. A
+// leading UTF-8 BOM is stripped — Windows editors and PowerShell's
+// `Out-File -Encoding utf8` add one, which otherwise breaks JSON parsing and
+// leaks a stray character into rendered output.
 func loadArg(s string) (string, error) {
 	if strings.HasPrefix(s, "@") {
 		b, err := os.ReadFile(s[1:])
 		if err != nil {
 			return "", err
 		}
-		return string(b), nil
+		return strings.TrimPrefix(string(b), "\ufeff"), nil
 	}
 	return s, nil
 }

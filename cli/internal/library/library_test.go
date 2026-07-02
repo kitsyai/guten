@@ -3,6 +3,12 @@ package library
 import "testing"
 
 func TestEmbeddedListAndLoad(t *testing.T) {
+	// Isolate HOME so only the embedded snapshot is found — a real machine may
+	// have ~/.kitsy/guten/{gutenkit,user} that would otherwise shadow it.
+	tmp := t.TempDir()
+	t.Setenv("USERPROFILE", tmp)
+	t.Setenv("HOME", tmp)
+
 	entries := List("")
 	names := map[string]bool{}
 	for _, e := range entries {

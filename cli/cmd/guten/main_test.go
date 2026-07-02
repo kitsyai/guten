@@ -68,6 +68,21 @@ func TestRunExportPDF(t *testing.T) {
 	}
 }
 
+func TestLoadArgStripsBOM(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "d.json")
+	if err := os.WriteFile(p, append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"a":1}`)...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := loadArg("@" + p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != `{"a":1}` {
+		t.Fatalf("BOM not stripped: %q", got)
+	}
+}
+
 func TestRenderDataThemeAndSet(t *testing.T) {
 	o := opts{
 		data:  `{"theme":{"accent_color":"#111"},"name":"x"}`,
