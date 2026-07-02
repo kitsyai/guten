@@ -47,9 +47,11 @@ else
   info "skipped (--skip-tests)"
 fi
 
-step "Bump versions ($OLD -> $NEW)"
-sed -i "s/\"version\": \"${OLD}\"/\"version\": \"${NEW}\"/" js/package.json
-sed -i "s/var version = \"${OLD}\"/var version = \"${NEW}\"/" cli/cmd/guten/main.go
+step "Bump versions (-> $NEW)"
+# Value-agnostic: replace the current version whatever it is, so go/cli/js need
+# not already be in sync. (js: first "version" field only; cli: the unique var.)
+sed -i "0,/\"version\": \"[^\"]*\"/s//\"version\": \"${NEW}\"/" js/package.json
+sed -i "s/var version = \"[^\"]*\"/var version = \"${NEW}\"/" cli/cmd/guten/main.go
 info "js/package.json + cli/cmd/guten/main.go ✓"
 
 step "Commit + push version bump"
