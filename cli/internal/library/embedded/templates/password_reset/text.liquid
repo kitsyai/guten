@@ -1,0 +1,8 @@
+{{ heading | default: "Reset your password" }}
+
+{{ body | default: "We received a request to reset your password. Use the link below to choose a new one." }}
+{% if reset_url %}
+{{ action_label | default: "Reset password" }}: {{ reset_url }}
+{% endif %}
+This link expires in {{ ttl_minutes | default: 60 }} minutes. If you didn't request this, no action is needed.
+{{ footer_text | default: brand_name }}

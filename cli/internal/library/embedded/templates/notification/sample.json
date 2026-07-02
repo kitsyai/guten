@@ -1,0 +1,9 @@
+{
+  "brand_name": "Acme",
+  "title": "Your report is ready",
+  "name": "Asha",
+  "body": "The monthly usage report you requested has finished generating and is ready to download.",
+  "action_url": "https://acme.test/reports/june",
+  "action_label": "View report",
+  "footer_text": "Acme Inc. · support@acme.test"
+}

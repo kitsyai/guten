@@ -2,7 +2,12 @@
   "version": 1,
   "templates": [
     { "name": "invoice", "kind": "document", "path": "templates/invoice", "description": "GST tax invoice (India)." },
-    { "name": "otp", "kind": "email", "path": "templates/otp", "description": "One-time passcode / verification email." },
-    { "name": "welcome", "kind": "email", "path": "templates/welcome", "description": "Welcome / onboarding email with a CTA." }
+    { "name": "receipt", "kind": "document", "path": "templates/receipt", "description": "Payment receipt (India)." },
+    { "name": "statement", "kind": "document", "path": "templates/statement", "description": "Account statement with transactions table." },
+    { "name": "otp", "kind": "email", "path": "templates/otp", "description": "One-time passcode / verification code email." },
+    { "name": "verification", "kind": "email", "path": "templates/verification", "description": "Email-address verification email." },
+    { "name": "password_reset", "kind": "email", "path": "templates/password_reset", "description": "Password reset email with a time-limited link." },
+    { "name": "welcome", "kind": "email", "path": "templates/welcome", "description": "Welcome / onboarding email with a CTA." },
+    { "name": "notification", "kind": "email", "path": "templates/notification", "description": "Generic transactional notification email." }
   ]
 }

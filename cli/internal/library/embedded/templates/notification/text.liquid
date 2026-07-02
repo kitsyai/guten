@@ -1,0 +1,9 @@
+{{ title }}
+
+Hi {{ name | default: "there" }},
+
+{{ body }}
+{% if action_url %}
+{{ action_label | default: "Open" }}: {{ action_url }}
+{% endif %}
+{{ footer_text | default: brand_name }}

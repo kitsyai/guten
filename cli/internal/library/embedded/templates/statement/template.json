@@ -1,0 +1,7 @@
+{
+  "name": "statement",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Account statement — account/period summary + transactions table with running balance.",
+  "parts": { "html": "@html.liquid" }
+}

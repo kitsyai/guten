@@ -1,0 +1,10 @@
+{
+  "brand_name": "Acme",
+  "subject": "Reset your Acme password",
+  "heading": "Reset your password",
+  "body": "We received a request to reset your Acme password. Click below to choose a new one.",
+  "reset_url": "https://acme.test/reset?token=xyz789",
+  "action_label": "Reset password",
+  "ttl_minutes": 60,
+  "footer_text": "Acme Inc. · support@acme.test"
+}

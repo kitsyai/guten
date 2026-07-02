@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><style>
+  :root{
+    --font: {{ theme.font_family | default: "Arial, Helvetica, sans-serif" }};
+    --accent: {{ theme.accent_color | default: "#0ea5e9" }};
+    --text: {{ theme.text_color | default: "#111827" }};
+    --muted: {{ theme.muted_color | default: "#6b7280" }};
+    --bg: {{ theme.bg_color | default: "#f4f7fb" }};
+    --card: {{ theme.card_color | default: "#ffffff" }};
+  }
+  body{margin:0;background:var(--bg);font-family:var(--font);color:var(--text);}
+  .wrap{max-width:520px;margin:0 auto;padding:32px 16px;}
+  .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:30px;}
+  .accent{height:5px;background:var(--accent);border-radius:6px;margin:-30px -30px 22px;}
+  .brand{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  h1{font-size:21px;margin:8px 0 8px;}
+  p{font-size:15px;line-height:1.6;}
+  .muted{color:var(--muted);}
+  .btn{display:inline-block;margin:18px 0 4px;background:var(--accent);color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;}
+  .footer{color:var(--muted);font-size:11px;margin-top:16px;text-align:center;}
+</style></head>
+<body><div class="wrap"><div class="card">
+  <div class="accent"></div>
+  {% if brand_name %}<div class="brand">{{ brand_name | escape }}</div>{% endif %}
+  <h1>{{ title | escape }}</h1>
+  <p>Hi {{ name | default: "there" | escape }},</p>
+  <p>{{ body | escape }}</p>
+  {% if action_url %}<p><a class="btn" href="{{ action_url | escape }}">{{ action_label | default: "Open" }}</a></p>{% endif %}
+  {{ slots.footer }}
+</div>
+<div class="footer">{{ footer_text | default: brand_name }}</div>
+</div></body></html>

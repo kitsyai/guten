@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><style>
+  :root{
+    --font: {{ theme.font_family | default: "'Noto Sans', Arial, Helvetica, sans-serif" }};
+    --fs: {{ theme.font_size | default: "10px" }};
+    --text: {{ theme.text_color | default: "#111" }};
+    --muted: {{ theme.muted_color | default: "#444" }};
+    --rule: {{ theme.rule_color | default: "#999" }};
+    --accent: {{ theme.accent_color | default: "#111" }};
+  }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 12mm" }}; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font);font-size:var(--fs);color:var(--text);line-height:1.35;}
+  .row{display:flex;justify-content:space-between;}
+  .rule{border-bottom:1px solid var(--rule);margin:8px 0;}
+  .muted{color:var(--muted);}
+  .col-right{text-align:right;}
+  .supplier-name,.doc-title{font-size:15px;font-weight:700;color:var(--accent);}
+  .meta{font-size:9px;}
+  .summary{display:flex;} .summary .c{width:50%;}
+  .kv{display:flex;} .kv .k{width:120px;} .kv-b .k{width:150px;font-weight:700;}
+  table.txns{width:100%;border-collapse:collapse;margin-top:12px;font-size:9px;}
+  table.txns th{font-weight:700;text-align:right;padding:5px 4px;border-bottom:1px solid #333;}
+  table.txns td{text-align:right;padding:5px 4px;border-bottom:1px solid #ccc;}
+  table.txns th.l,table.txns td.l{text-align:left;}
+  .footer{margin-top:20px;color:#666;font-size:8px;} .footer h5{color:#444;font-size:9px;font-weight:700;margin:0 0 2px;}
+  .footer .baseline{display:flex;justify-content:space-between;margin-top:10px;}
+</style></head>
+<body>
+  <div class="row">
+    <div>
+      <div class="supplier-name">{{ supplier.legal_name | escape }}</div>
+      <div class="meta muted">
+        {% if supplier.gstin %}<div>GSTIN : {{ supplier.gstin }}</div>{% endif %}
+        {% if supplier.email %}<div>E-mail : {{ supplier.email }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="col-right">
+      <div class="doc-title">{{ title | default: "Account Statement" }}</div>
+      <div class="meta muted">
+        {% if statement.number %}<div>Statement No. : {{ statement.number }}</div>{% endif %}
+        <div>Period : {{ statement.period_from }} – {{ statement.period_to }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="summary">
+    <div class="c">
+      <div class="kv"><span class="k">Account Holder :</span><span>{{ account.holder | escape }}</span></div>
+      {% if account.number %}<div class="kv"><span class="k">Account No. :</span><span>{{ account.number }}</span></div>{% endif %}
+    </div>
+    <div class="c">
+      <div class="kv kv-b"><span class="k">Opening Balance :</span><span>{{ opening_balance }}</span></div>
+      <div class="kv kv-b"><span class="k">Closing Balance :</span><span>{{ closing_balance }}</span></div>
+    </div>
+  </div>
+
+  <table class="txns">
+    <thead>
+      <tr><th class="l">Date</th><th class="l">Description</th><th>Debit</th><th>Credit</th><th>Balance</th></tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td class="l">{{ t.date }}</td>
+        <td class="l">{{ t.description | escape }}</td>
+        <td>{{ t.debit | default: "—" }}</td>
+        <td>{{ t.credit | default: "—" }}</td>
+        <td>{{ t.balance }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    {% if footer.terms %}<h5>Notes</h5><div>{{ footer.terms | escape }}</div>{% endif %}
+    {% if footer.platform %}<div>Generated via {{ footer.platform }}.</div>{% endif %}
+    <div class="baseline">
+      <span>{{ footer.disclaimer | default: "This is a system-generated statement. No signature required." }}</span>
+      <span>Page 1 of 1</span>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,10 @@
+{
+  "brand_name": "Acme",
+  "subject": "Confirm your email for Acme",
+  "heading": "Confirm your email",
+  "body": "Confirm this email address to finish setting up your Acme account.",
+  "verify_url": "https://acme.test/verify?token=abc123",
+  "action_label": "Verify email",
+  "ttl_hours": 24,
+  "footer_text": "Acme Inc. · support@acme.test"
+}

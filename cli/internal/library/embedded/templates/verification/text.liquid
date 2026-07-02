@@ -1,0 +1,8 @@
+{{ heading | default: "Confirm your email" }}
+
+{{ body | default: "Confirm this email address to finish setting up your account." }}
+{% if verify_url %}
+{{ action_label | default: "Verify email" }}: {{ verify_url }}
+{% endif %}
+This link expires in {{ ttl_hours | default: 24 }} hours. Didn't sign up? You can ignore this email.
+{{ footer_text | default: brand_name }}

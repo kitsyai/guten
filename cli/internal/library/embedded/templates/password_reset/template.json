@@ -1,0 +1,11 @@
+{
+  "name": "password_reset",
+  "kind": "email",
+  "renderer": "liquid",
+  "description": "Password reset email with a time-limited link.",
+  "parts": {
+    "subject": "{{ subject | default: \"Reset your password\" }}",
+    "html": "@html.liquid",
+    "text": "@text.liquid"
+  }
+}

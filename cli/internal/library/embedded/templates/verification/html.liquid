@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><style>
+  :root{
+    --font: {{ theme.font_family | default: "Arial, Helvetica, sans-serif" }};
+    --accent: {{ theme.accent_color | default: "#2563eb" }};
+    --text: {{ theme.text_color | default: "#111827" }};
+    --muted: {{ theme.muted_color | default: "#6b7280" }};
+    --bg: {{ theme.bg_color | default: "#f4f7fb" }};
+    --card: {{ theme.card_color | default: "#ffffff" }};
+  }
+  body{margin:0;background:var(--bg);font-family:var(--font);color:var(--text);}
+  .wrap{max-width:480px;margin:0 auto;padding:32px 16px;}
+  .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:28px;}
+  .brand{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  h1{font-size:20px;margin:8px 0 6px;}
+  p{font-size:15px;line-height:1.6;}
+  .muted{color:var(--muted);font-size:13px;}
+  .btn{display:inline-block;margin:16px 0;background:var(--accent);color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;}
+  .link{word-break:break-all;color:var(--accent);font-size:12px;}
+  .footer{color:var(--muted);font-size:11px;margin-top:16px;text-align:center;}
+</style></head>
+<body><div class="wrap"><div class="card">
+  {% if brand_name %}<div class="brand">{{ brand_name | escape }}</div>{% endif %}
+  <h1>{{ heading | default: "Confirm your email" }}</h1>
+  <p>{{ body | default: "Confirm this email address to finish setting up your account." }}</p>
+  {% if verify_url %}<p><a class="btn" href="{{ verify_url | escape }}">{{ action_label | default: "Verify email" }}</a></p>
+  <p class="muted">Or paste this link into your browser:<br><span class="link">{{ verify_url }}</span></p>{% endif %}
+  <p class="muted">This link expires in {{ ttl_hours | default: 24 }} hours. Didn't sign up? You can ignore this email.</p>
+  {{ slots.footer }}
+</div>
+<div class="footer">{{ footer_text | default: brand_name }}</div>
+</div></body></html>

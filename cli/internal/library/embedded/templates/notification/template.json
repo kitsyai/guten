@@ -1,0 +1,11 @@
+{
+  "name": "notification",
+  "kind": "email",
+  "renderer": "liquid",
+  "description": "Generic transactional notification email with an optional call-to-action.",
+  "parts": {
+    "subject": "{{ subject | default: title }}",
+    "html": "@html.liquid",
+    "text": "@text.liquid"
+  }
+}

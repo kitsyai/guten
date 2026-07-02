@@ -1,0 +1,11 @@
+{
+  "name": "verification",
+  "kind": "email",
+  "renderer": "liquid",
+  "description": "Email-address verification / confirmation email with a link.",
+  "parts": {
+    "subject": "{{ subject | default: \"Confirm your email\" }}",
+    "html": "@html.liquid",
+    "text": "@text.liquid"
+  }
+}

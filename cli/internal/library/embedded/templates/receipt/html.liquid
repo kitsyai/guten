@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><style>
+  :root{
+    --font: {{ theme.font_family | default: "'Noto Sans', Arial, Helvetica, sans-serif" }};
+    --fs: {{ theme.font_size | default: "10px" }};
+    --text: {{ theme.text_color | default: "#111" }};
+    --muted: {{ theme.muted_color | default: "#444" }};
+    --rule: {{ theme.rule_color | default: "#999" }};
+    --accent: {{ theme.accent_color | default: "#111" }};
+    --chit: {{ theme.chit_border_color | default: "#888" }};
+  }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 12mm" }}; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font);font-size:var(--fs);color:var(--text);line-height:1.35;}
+  .row{display:flex;justify-content:space-between;}
+  .rule{border-bottom:1px solid var(--rule);margin:8px 0;}
+  .muted{color:var(--muted);}
+  .col-right{text-align:right;}
+  .supplier-name,.doc-title{font-size:15px;font-weight:700;color:var(--accent);}
+  .meta{font-size:9px;}
+  .summary{display:flex;} .summary .c{width:50%;}
+  .kv{display:flex;} .kv .k{width:120px;} .kv-b .k{width:140px;font-weight:700;}
+  .parties{display:flex;gap:10px;margin-top:4px;} .party{width:50%;}
+  .party h4{font-size:11px;font-weight:700;margin:0 0 3px;}
+  h3.sec{font-size:11px;font-weight:700;margin:14px 0 4px;}
+  .chit{border:1px dashed var(--chit);padding:8px 10px;margin-top:20px;}
+  .chit h4{margin:0 0 5px;font-size:11px;font-weight:700;}
+  .chit .grid{display:flex;flex-wrap:wrap;} .chit .cell{width:50%;display:flex;padding:2px 0;} .chit .cell .k{width:130px;}
+  .chit .ack{margin-top:6px;}
+  .footer{margin-top:20px;color:#666;font-size:8px;} .footer h5{color:#444;font-size:9px;font-weight:700;margin:0 0 2px;}
+  .footer .baseline{display:flex;justify-content:space-between;margin-top:10px;}
+</style></head>
+<body>
+  <div class="row">
+    <div>
+      <div class="supplier-name">{{ supplier.legal_name | escape }}</div>
+      <div class="meta muted">
+        {% if supplier.cin %}<div>CIN&nbsp;&nbsp;: {{ supplier.cin }}</div>{% endif %}
+        <div>GSTIN : {{ supplier.gstin }}</div>
+        {% if supplier.pan %}<div>PAN&nbsp;&nbsp;: {{ supplier.pan }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="col-right">
+      <div class="doc-title">{{ title | default: "Receipt" }}</div>
+      <div class="meta muted">
+        <div>Receipt No. : {{ receipt.number }}</div>
+        <div>Receipt Date : {{ receipt.date }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="summary">
+    <div class="c">
+      <div class="kv"><span class="k">Order No. :</span><span>{{ order.number }}</span></div>
+      {% if order.date %}<div class="kv"><span class="k">Order Date :</span><span>{{ order.date }}</span></div>{% endif %}
+      {% if receipt.document_ref %}<div class="kv"><span class="k">Document Ref :</span><span>{{ receipt.document_ref }}</span></div>{% endif %}
+    </div>
+    <div class="c">
+      <div class="kv kv-b"><span class="k">Amount Received :</span><span>{{ amount.received }}</span></div>
+      <div class="kv kv-b"><span class="k">Payment Status :</span><span>{{ amount.status | default: "PAID" }}</span></div>
+      <div class="kv kv-b"><span class="k">Balance Due :</span><span>{{ amount.balance | default: "₹0.00" }}</span></div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="parties">
+    <div class="party">
+      <h4>Supplier</h4>
+      <div>{{ supplier.legal_name | escape }}</div>
+      {% for l in supplier.address_lines %}<div>{{ l | escape }}</div>{% endfor %}
+      <div>GSTIN : {{ supplier.gstin }}</div>
+    </div>
+    <div class="party">
+      <h4>Received From</h4>
+      <div>{{ received_from.name | escape }}</div>
+      {% if received_from.org %}<div>{{ received_from.org | escape }}</div>{% endif %}
+      {% for l in received_from.lines %}<div>{{ l | escape }}</div>{% endfor %}
+      {% if received_from.gstin %}<div>GSTIN : {{ received_from.gstin }}</div>{% endif %}
+    </div>
+  </div>
+
+  {% if invoice.number or items %}
+  <h3 class="sec">Against Invoice / Order</h3>
+  {% if invoice.number %}<div class="kv"><span class="k">Invoice No. :</span><span>{{ invoice.number }}</span></div>{% endif %}
+  {% if invoice.date %}<div class="kv"><span class="k">Invoice Date :</span><span>{{ invoice.date }}</span></div>{% endif %}
+  {% for it in items %}<div class="kv"><span class="k">Service :</span><span>{{ it | escape }}</span></div>{% endfor %}
+  {% endif %}
+
+  {% if payment %}
+  <div class="chit">
+    <h4>Payment Details</h4>
+    <div class="grid">
+      {% for r in payment.rows %}
+      <div class="cell"><span class="k">{{ r.lk }} :</span><span>{{ r.lv }}</span></div>
+      <div class="cell"><span class="k">{{ r.rk }} :</span><span>{{ r.rv }}</span></div>
+      {% endfor %}
+    </div>
+    {% if payment.acknowledgement %}<div class="ack">{{ payment.acknowledgement }}</div>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="footer">
+    <h5>Terms &amp; Support</h5>
+    <div>{{ footer.terms | escape }}</div>
+    {% if footer.platform %}<div>Service rendered via {{ footer.platform }}.</div>{% endif %}
+    <div class="baseline">
+      <span>{{ footer.disclaimer | default: "This is a system-generated receipt. No signature required." }}</span>
+      <span>Page 1 of 1</span>
+    </div>
+  </div>
+</body></html>
