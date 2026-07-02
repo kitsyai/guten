@@ -1,0 +1,28 @@
+name: release-cli
+
+# Builds prebuilt guten CLI binaries (win/mac/linux, amd64/arm64) and publishes
+# them to a GitHub Release whenever a cli/vX.Y.Z tag is pushed. Users then grab a
+# binary — no Go toolchain needed.
+on:
+  push:
+    tags: ["cli/v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
