@@ -1,10 +1,14 @@
 <#
 Usage:
-  scripts/release.ps1 [--skip-tests] [--no-tag] <X.Y.Z>
+  scripts/release.ps1 [--skip-tests] [--no-tag] <major|minor|patch|X.Y.Z>
 
 Examples:
-  .\scripts\release.ps1 --skip-tests 0.2.2
-  .\scripts\release.ps1 --no-tag 0.2.2
+  .\scripts\release.ps1 patch            # 3.4.6 -> 3.4.7
+  .\scripts\release.ps1 minor            # 3.4.6 -> 3.5.0
+  .\scripts\release.ps1 major            # 3.4.6 -> 4.0.0
+  .\scripts\release.ps1 0.3.0            # explicit version
+  .\scripts\release.ps1 --skip-tests patch
+  .\scripts\release.ps1 --no-tag 0.3.0
 #>
 
 [CmdletBinding()]
@@ -36,7 +40,7 @@ function Die {
 }
 
 function Usage {
-    Write-Host "usage: scripts/release.ps1 [--skip-tests] [--no-tag] <X.Y.Z>"
+    Write-Host "usage: scripts/release.ps1 [--skip-tests] [--no-tag] <major|minor|patch|X.Y.Z>"
 }
 
 function Ensure-Command {
@@ -110,9 +114,7 @@ if (-not $newVersion) {
     Usage
     Die "version is required"
 }
-if ($newVersion -notmatch "^[0-9]+\.[0-9]+\.[0-9]+$") {
-    Die "version must be X.Y.Z (got '$newVersion')"
-}
+# version (major|minor|patch|X.Y.Z) is resolved after the current version is read
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $root
@@ -124,6 +126,23 @@ $packageJsonText = Get-Content -Raw $jsPackagePath
 $oldMatch = [regex]::Match($packageJsonText, '"version"\s*:\s*"([^"]+)"')
 if (-not $oldMatch.Success) { Die "cannot read version from js/package.json" }
 $oldVersion = $oldMatch.Groups[1].Value
+
+# Semantic bump: major|minor|patch auto-increments from the current version
+# (e.g. 3.4.6 -> major=4.0.0, minor=3.5.0, patch=3.4.7). Or pass an explicit X.Y.Z.
+if ($newVersion -in @('major', 'minor', 'patch')) {
+    $p = $oldVersion.Split('.')
+    if ($p.Count -ne 3) { Die "cannot parse current version '$oldVersion'" }
+    $ma = [int]$p[0]; $mi = [int]$p[1]; $pa = [int]$p[2]
+    switch ($newVersion) {
+        'major' { $ma++; $mi = 0; $pa = 0 }
+        'minor' { $mi++; $pa = 0 }
+        'patch' { $pa++ }
+    }
+    $newVersion = "$ma.$mi.$pa"
+}
+elseif ($newVersion -notmatch '^\d+\.\d+\.\d+$') {
+    Die "expected major|minor|patch or X.Y.Z (got '$newVersion')"
+}
 
 if ($oldVersion -eq $newVersion) {
     Die "already at $newVersion"

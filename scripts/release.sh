@@ -4,8 +4,11 @@
 # go/vX makes the Go module resolvable. Mirrors kitsy/cnos's release.sh.
 #
 # Usage:
-#   scripts/release.sh 0.3.0
-#   scripts/release.sh --skip-tests 0.3.0
+#   scripts/release.sh patch              # 3.4.6 -> 3.4.7
+#   scripts/release.sh minor              # 3.4.6 -> 3.5.0
+#   scripts/release.sh major              # 3.4.6 -> 4.0.0
+#   scripts/release.sh 0.3.0              # explicit version
+#   scripts/release.sh --skip-tests patch
 #   scripts/release.sh --no-tag 0.3.0     # bump + push main + go tag only
 set -euo pipefail
 
@@ -19,15 +22,33 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --skip-tests) SKIP_TESTS=true; shift ;;
     --no-tag)     NO_TAG=true;     shift ;;
-    -h|--help)    echo "usage: release.sh [--skip-tests] [--no-tag] <X.Y.Z>"; exit 0 ;;
+    -h|--help)    echo "usage: release.sh [--skip-tests] [--no-tag] <major|minor|patch|X.Y.Z>"; exit 0 ;;
     -*)           die "unknown option: $1" ;;
     *)            [[ -z "$NEW" ]] || die "unexpected argument: $1"; NEW="$1"; shift ;;
   esac
 done
-[[ "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must be X.Y.Z (got '${NEW:-}')"
+[[ -n "${NEW:-}" ]] || die "expected major|minor|patch or X.Y.Z"
 
 OLD=$(sed -n 's/.*"version": "\([^"]*\)".*/\1/p' js/package.json | head -1)
 [[ -n "$OLD" ]] || die "cannot read version from js/package.json"
+
+# Semantic bump: major|minor|patch auto-increments from the current version
+# (e.g. 3.4.6 --> major=4.0.0, minor=3.5.0, patch=3.4.7). Or pass an explicit X.Y.Z.
+case "$NEW" in
+  major|minor|patch)
+    IFS=. read -r MA MI PA <<< "$OLD"
+    [[ "$MA" =~ ^[0-9]+$ && "$MI" =~ ^[0-9]+$ && "$PA" =~ ^[0-9]+$ ]] || die "cannot parse current version '$OLD'"
+    case "$NEW" in
+      major) MA=$((MA + 1)); MI=0; PA=0 ;;
+      minor) MI=$((MI + 1)); PA=0 ;;
+      patch) PA=$((PA + 1)) ;;
+    esac
+    NEW="${MA}.${MI}.${PA}"
+    ;;
+  *)
+    [[ "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "expected major|minor|patch or X.Y.Z (got '$NEW')"
+    ;;
+esac
 [[ "$OLD" != "$NEW" ]] || die "already at $NEW"
 echo; echo "Release: $OLD -> $NEW"
 
