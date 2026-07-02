@@ -1,6 +1,6 @@
 {
   "name": "@kitsy/guten",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Multi-format, multi-runtime templating engine (Liquid) — Node + browser. The JS runtime of kitsyai/guten.",
   "license": "MIT",
   "type": "module",
@@ -22,7 +22,8 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "tsup"
   },
   "dependencies": {
     "liquidjs": "^10.16.0"
