@@ -34,7 +34,7 @@ templates, not just the batteries-included ones.
 | Runtime | Status | Path |
 | --- | --- | --- |
 | Go | **v0.1 — working** | [`go/`](go) (module `github.com/kitsyai/guten/go`) |
-| Node + browser | **v0.1 — working** | [`js/`](js) (npm `@kitsyai/guten`) |
+| Node + browser | **v0.1 — working** | [`js/`](js) (npm `@kitsy/guten`) |
 
 A shared [`spec/`](spec) defines the template + data manifest, and a **parity
 corpus** ([`spec/corpus/`](spec/corpus)) guarantees Go and JS produce identical
@@ -53,7 +53,7 @@ both runtimes assert against it.
 | Path | Purpose |
 | --- | --- |
 | `go/` | Go module: the engine + batteries-included templates. |
-| `js/` | Node/browser runtime (npm `@kitsyai/guten`). |
+| `js/` | Node/browser runtime (npm `@kitsy/guten`). |
 | `templates/` | Batteries-included template sources. |
 | `spec/` | Template + `template_data` manifest schema. |
 | `docs/` | Usage and design notes. |

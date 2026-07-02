@@ -1,4 +1,4 @@
-# @kitsyai/guten (JS runtime)
+# @kitsy/guten (JS runtime)
 
 The **Node + browser** runtime of [guten](https://github.com/kitsyai/guten) — a
 multi-format, multi-runtime templating engine (Liquid). It implements the same
@@ -8,13 +8,13 @@ engine, and a **shared parity corpus proves the two render identically**.
 ## Install
 
 ```
-npm i @kitsyai/guten     # or: pnpm add @kitsyai/guten
+npm i @kitsy/guten     # or: pnpm add @kitsy/guten
 ```
 
 ## Usage
 
 ```ts
-import { Engine, newWithBuiltins } from "@kitsyai/guten";
+import { Engine, newWithBuiltins } from "@kitsy/guten";
 
 const e = newWithBuiltins();
 const r = e.render("basic_notification", {
