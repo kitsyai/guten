@@ -18,7 +18,7 @@ import (
 	guten "github.com/kitsyai/guten/go"
 )
 
-var version = "0.2.3"
+var version = "0.2.4"
 
 const usageText = `guten ` + `— templating engine CLI
 
