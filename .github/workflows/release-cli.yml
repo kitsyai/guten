@@ -1,8 +1,9 @@
 name: release-cli
 
 # Builds prebuilt guten CLI binaries (win/mac/linux, amd64/arm64) and publishes
-# them to a GitHub Release whenever a cli/vX.Y.Z tag is pushed. Users then grab a
-# binary — no Go toolchain needed.
+# them to the GitHub Release for the pushed cli/vX.Y.Z tag — no Go toolchain
+# needed by users. NOTE: a tag only triggers this if the workflow already exists
+# at the tagged commit, so tag AFTER this file is on main.
 on:
   push:
     tags: ["cli/v*"]
@@ -23,6 +24,8 @@ jobs:
       - uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
-          args: release --clean
+          install-only: true
+      - name: Build + publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release-cli.sh "${GITHUB_REF_NAME#cli/}"

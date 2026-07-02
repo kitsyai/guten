@@ -1,13 +1,12 @@
 version: 2
 project_name: guten
 
-# The CLI is a submodule (cli/) released on cli/vX.Y.Z tags.
-monorepo:
-  tag_prefix: cli/
-  dir: cli
-
+# The CLI is a submodule (cli/). We build it here and publish to the prefixed
+# cli/vX.Y.Z tag via gh (see scripts/release-cli.sh) — OSS goreleaser has no
+# monorepo/tag_prefix support, so version comes from GORELEASER_CURRENT_TAG.
 builds:
   - id: guten
+    dir: cli
     main: ./cmd/guten
     binary: guten
     env:
@@ -26,8 +25,3 @@ archives:
 
 checksum:
   name_template: "checksums.txt"
-
-release:
-  github:
-    owner: kitsyai
-    name: guten
