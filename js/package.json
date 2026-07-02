@@ -1,6 +1,6 @@
 {
   "name": "@kitsy/guten",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Multi-format, multi-runtime templating engine (Liquid) — Node + browser. The JS runtime of kitsyai/guten.",
   "license": "MIT",
   "type": "module",
@@ -14,7 +14,10 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -36,6 +39,8 @@
     "directory": "js"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
