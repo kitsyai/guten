@@ -89,7 +89,7 @@ func TestRenderDataThemeAndSet(t *testing.T) {
 		theme: `{"font_family":"Georgia"}`,
 		sets:  []string{"theme.accent_color=#0ea5e9", "footer.platform=acme.com"},
 	}
-	d, err := renderData(o, nil)
+	d, err := renderData(o, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

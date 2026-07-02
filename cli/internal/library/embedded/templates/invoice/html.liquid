@@ -14,7 +14,7 @@
     --accent: {{ theme.accent_color | default: "#111" }};
     --chit: {{ theme.chit_border_color | default: "#888" }};
   }
-  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 12mm" }}; }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 30mm" }}; }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -69,7 +69,9 @@
   .chit .ack { margin-top: 6px; }
 
   /* Footer */
-  .footer { margin-top: 20px; color: #666; font-size: 8px; }
+  /* Fixed footer repeats at the bottom of every printed page; the @page
+     bottom margin reserves space so body content never overlaps it. */
+  .footer { position: fixed; left: 14mm; right: 14mm; bottom: 8mm; color: #666; font-size: 8px; }
   .footer h5 { color: #444; font-size: 9px; font-weight: 700; margin: 0 0 2px; }
   .footer .baseline { display: flex; justify-content: space-between; margin-top: 10px; }
 </style>
@@ -194,7 +196,6 @@
     {% if footer.platform %}<div>Service rendered via {{ footer.platform }}.</div>{% endif %}
     <div class="baseline">
       <span>{{ footer.disclaimer }}</span>
-      <span>Page 1 of 1</span>
     </div>
   </div>
 

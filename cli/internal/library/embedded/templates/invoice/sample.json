@@ -1,52 +1,42 @@
 {
   "supplier": {
-    "legal_name": "HEYPKV INNOVATIONS PRIVATE LIMITED",
-    "cin": "U62011BR2025PTC078383",
-    "gstin": "10AAICH1439H1ZZ",
-    "pan": "AAICH1439H",
+    "legal_name": "Acme Retail Private Limited",
+    "cin": "U12345MH2020PTC000000",
+    "gstin": "27AAAAA0000A1Z5",
+    "pan": "AAAAA0000A",
     "address_lines": [
-      "HOUSE NO AN 002 0125, BIRATPUR GARH,",
-      "Aurangabad (BH), Aurangabad,",
-      "Aurangabad(BH)- 824101, Bihar,"
+      "101 Example Street,",
+      "Andheri East,",
+      "Mumbai 400069, Maharashtra,"
     ],
-    "phone": "+91 8055198838",
-    "email": "hello@kitsy.ai"
+    "phone": "+91 90000 00000",
+    "email": "billing@acme.example"
   },
   "invoice": {
     "title": "Tax Invoice",
-    "number": "KD27I-0000000001",
+    "number": "INV-0000000001",
     "date": "01 JUN 2026",
-    "place_of_supply": "Bihar",
-    "state_code": "10",
-    "document_ref": "KD27I-VVVAR"
+    "place_of_supply": "Maharashtra",
+    "state_code": "27",
+    "document_ref": "INV-REF-0001"
   },
-  "order": { "number": "KD27O-HHH8E", "date": "01 Jun 2026" },
+  "order": { "number": "ORD-ABC123", "date": "01 Jun 2026" },
   "totals_summary": { "total": "₹848.00", "paid": "₹848.00", "balance": "₹0.00" },
   "bill_to": {
-    "name": "Pranay Sinha",
-    "org": "PRANAY KUMAR SINHA",
-    "lines": [
-      "House No. AN-002-0125, Garh Par,",
-      "Mohalla Biratpur, Aurangabad",
-      "Aurangabad, Bihar, 824101",
-      "IN"
-    ],
-    "gstin": "10CLZPS0601K1ZY"
+    "name": "Sam Buyer",
+    "org": "Sample Buyer LLP",
+    "lines": ["12 Demo Lane,", "Bandra West,", "Mumbai, Maharashtra, 400050", "IN"],
+    "gstin": "27BBBBB1111B1Z5"
   },
   "ship_to": {
-    "name": "Pranay Sinha",
-    "org": "PRANAY KUMAR SINHA",
-    "lines": [
-      "House No. AN-002-0125, Garh Par,",
-      "Mohalla Biratpur, Aurangabad",
-      "Aurangabad, Bihar, 824101",
-      "IN"
-    ],
-    "gstin": "10CLZPS0601K1ZY"
+    "name": "Sam Buyer",
+    "org": "Sample Buyer LLP",
+    "lines": ["12 Demo Lane,", "Bandra West,", "Mumbai, Maharashtra, 400050", "IN"],
+    "gstin": "27BBBBB1111B1Z5"
   },
   "items": [
     {
-      "description": "Domain transfer for beyyond.in — 1 year",
+      "description": "Domain transfer for example.in — 1 year",
       "sac": "998315",
       "qty": "1",
       "duration": "1 yr",
@@ -66,15 +56,15 @@
   "grand_total": { "label": "Total Invoice Value", "value": "₹848.00" },
   "payment": {
     "rows": [
-      { "lk": "Payment Mode", "lv": "Cash", "rk": "Payment Status", "rv": "PAID" },
-      { "lk": "Amount Received", "lv": "₹848.00", "rk": "Payment Date & Time", "rv": "01 Jun 2026, 23:43 IST" },
-      { "lk": "Balance Due", "lv": "₹0.00", "rk": "Payment Reference", "rv": "Cash" }
+      { "lk": "Payment Mode", "lv": "Card", "rk": "Payment Status", "rv": "PAID" },
+      { "lk": "Amount Received", "lv": "₹848.00", "rk": "Payment Date & Time", "rv": "01 Jun 2026, 12:00 IST" },
+      { "lk": "Balance Due", "lv": "₹0.00", "rk": "Payment Reference", "rv": "TXN12345" }
     ],
     "acknowledgement": "Received with thanks a sum of ₹848.00 against this invoice. This document also serves as receipt for the payment."
   },
   "footer": {
-    "terms": "Domain registration/renewal services are subject to applicable registry, registrar, and platform terms. Once successfully registered, renewed, or transferred, domain orders are generally non-cancellable and non-refundable, except where required by applicable law or registry/registrar policy. For billing, service, or domain-related support, email us at support@kitsy.ai.",
-    "platform": "kitsy.ai",
+    "terms": "Services are subject to the applicable platform, registry, and registrar terms. For billing or support, email support@acme.example.",
+    "platform": "acme.example",
     "disclaimer": "This is a system-generated tax invoice. No signature required."
   }
 }

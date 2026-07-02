@@ -1,21 +1,21 @@
 {
   "supplier": {
-    "legal_name": "HEYPKV INNOVATIONS PRIVATE LIMITED",
-    "gstin": "10AAICH1439H1ZZ",
-    "email": "hello@kitsy.ai"
+    "legal_name": "Acme Retail Private Limited",
+    "gstin": "27AAAAA0000A1Z5",
+    "email": "billing@acme.example"
   },
   "title": "Account Statement",
-  "statement": { "number": "KD27S-0000000001", "period_from": "01 May 2026", "period_to": "31 May 2026" },
-  "account": { "holder": "Pranay Sinha", "number": "ACC-100245" },
+  "statement": { "number": "STMT-0000000001", "period_from": "01 May 2026", "period_to": "31 May 2026" },
+  "account": { "holder": "Sam Buyer", "number": "ACC-100245" },
   "opening_balance": "₹0.00",
   "closing_balance": "₹1,696.00",
   "transactions": [
-    { "date": "03 May 2026", "description": "Domain registration for beyyond.in", "debit": "—", "credit": "₹848.00", "balance": "₹848.00" },
-    { "date": "18 May 2026", "description": "Domain transfer for example.in", "debit": "—", "credit": "₹848.00", "balance": "₹1,696.00" }
+    { "date": "03 May 2026", "description": "Domain registration for example.in", "debit": "—", "credit": "₹848.00", "balance": "₹848.00" },
+    { "date": "18 May 2026", "description": "Domain transfer for demo.in", "debit": "—", "credit": "₹848.00", "balance": "₹1,696.00" }
   ],
   "footer": {
     "terms": "For any discrepancy, contact support within 30 days of the statement date.",
-    "platform": "kitsy.ai",
+    "platform": "acme.example",
     "disclaimer": "This is a system-generated statement. No signature required."
   }
 }

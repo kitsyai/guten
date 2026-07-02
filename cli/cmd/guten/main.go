@@ -198,45 +198,45 @@ func loadData(s string) (map[string]any, error) {
 // engineAndTemplate builds an engine (Liquid + layout renderers) and registers
 // the template from --lib, --manifest, or -t/--part. It returns the template
 // name and the bundle's default theme (nil unless --lib supplied one).
-func engineAndTemplate(o opts) (*guten.Engine, string, map[string]any, error) {
+func engineAndTemplate(o opts) (*guten.Engine, string, map[string]any, map[string]any, error) {
 	e := guten.New()
 	e.RegisterRenderer(guten.NewLayoutRenderer())
 	if o.lib != "" {
 		b, err := library.LoadBundle(o.lib, o.libDir)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, nil, err
 		}
 		if err := registerBundle(e, b, o.libDir); err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, nil, err
 		}
-		return e, b.Template.Name, b.Theme, nil
+		return e, b.Template.Name, b.Theme, b.Sample, nil
 	}
 	if o.manifest != "" {
 		raw, err := loadArg(o.manifest)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, nil, err
 		}
 		var t guten.Template
 		if err := json.Unmarshal([]byte(raw), &t); err != nil {
-			return nil, "", nil, fmt.Errorf("parse manifest: %w", err)
+			return nil, "", nil, nil, fmt.Errorf("parse manifest: %w", err)
 		}
 		if err := e.Register(t); err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, nil, err
 		}
-		return e, t.Name, nil, nil
+		return e, t.Name, nil, nil, nil
 	}
 	if o.template == "" {
-		return nil, "", nil, fmt.Errorf("one of --lib, -t/--template, or --manifest is required")
+		return nil, "", nil, nil, fmt.Errorf("one of --lib, -t/--template, or --manifest is required")
 	}
 	src, err := loadArg(o.template)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", nil, nil, err
 	}
 	t := guten.Template{Name: "cli", Renderer: o.renderer, Parts: map[string]string{o.part: src}}
 	if err := e.Register(t); err != nil {
-		return nil, "", nil, err
+		return nil, "", nil, nil, err
 	}
-	return e, t.Name, nil, nil
+	return e, t.Name, nil, nil, nil
 }
 
 // registerBundle registers a bundle, first registering any base it extends
@@ -267,11 +267,11 @@ func partForExt(path string) string {
 
 // runRender renders the requested part and returns it (testable core of render).
 func runRender(o opts) (string, error) {
-	e, name, baseTheme, err := engineAndTemplate(o)
+	e, name, baseTheme, baseSample, err := engineAndTemplate(o)
 	if err != nil {
 		return "", err
 	}
-	data, err := renderData(o, baseTheme)
+	data, err := renderData(o, baseTheme, baseSample)
 	if err != nil {
 		return "", err
 	}
@@ -287,10 +287,18 @@ func runRender(o opts) (string, error) {
 
 // renderData builds the render data with theme layering (low -> high): the
 // bundle's default theme, then data.theme, then --theme, then --set overrides.
-func renderData(o opts, baseTheme map[string]any) (map[string]any, error) {
+func renderData(o opts, baseTheme, baseSample map[string]any) (map[string]any, error) {
 	data, err := loadData(o.data)
 	if err != nil {
 		return nil, err
+	}
+	// --lib with no -d: fall back to the bundle's sample data.
+	if strings.TrimSpace(o.data) == "" {
+		for k, v := range baseSample {
+			if _, ok := data[k]; !ok {
+				data[k] = v
+			}
+		}
 	}
 	theme := map[string]any{}
 	for k, v := range baseTheme {
@@ -424,11 +432,11 @@ func runExport(o opts) ([]string, error) {
 	if len(o.outs) == 0 {
 		return nil, fmt.Errorf("export requires at least one -o <file>")
 	}
-	e, name, baseTheme, err := engineAndTemplate(o)
+	e, name, baseTheme, baseSample, err := engineAndTemplate(o)
 	if err != nil {
 		return nil, err
 	}
-	data, err := renderData(o, baseTheme)
+	data, err := renderData(o, baseTheme, baseSample)
 	if err != nil {
 		return nil, err
 	}

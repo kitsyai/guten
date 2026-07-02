@@ -8,7 +8,7 @@
     --rule: {{ theme.rule_color | default: "#999" }};
     --accent: {{ theme.accent_color | default: "#111" }};
   }
-  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 12mm" }}; }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 30mm" }}; }
   *{box-sizing:border-box;}
   body{margin:0;font-family:var(--font);font-size:var(--fs);color:var(--text);line-height:1.35;}
   .row{display:flex;justify-content:space-between;}
@@ -23,7 +23,7 @@
   table.txns th{font-weight:700;text-align:right;padding:5px 4px;border-bottom:1px solid #333;}
   table.txns td{text-align:right;padding:5px 4px;border-bottom:1px solid #ccc;}
   table.txns th.l,table.txns td.l{text-align:left;}
-  .footer{margin-top:20px;color:#666;font-size:8px;} .footer h5{color:#444;font-size:9px;font-weight:700;margin:0 0 2px;}
+  .footer{position:fixed;left:14mm;right:14mm;bottom:8mm;color:#666;font-size:8px;} .footer h5{color:#444;font-size:9px;font-weight:700;margin:0 0 2px;}
   .footer .baseline{display:flex;justify-content:space-between;margin-top:10px;}
 </style></head>
 <body>
@@ -78,7 +78,6 @@
     {% if footer.platform %}<div>Generated via {{ footer.platform }}.</div>{% endif %}
     <div class="baseline">
       <span>{{ footer.disclaimer | default: "This is a system-generated statement. No signature required." }}</span>
-      <span>Page 1 of 1</span>
     </div>
   </div>
 </body></html>

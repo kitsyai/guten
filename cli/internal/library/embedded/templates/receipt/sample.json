@@ -1,34 +1,34 @@
 {
   "supplier": {
-    "legal_name": "HEYPKV INNOVATIONS PRIVATE LIMITED",
-    "cin": "U62011BR2025PTC078383",
-    "gstin": "10AAICH1439H1ZZ",
-    "pan": "AAICH1439H",
-    "address_lines": ["HOUSE NO AN 002 0125, BIRATPUR GARH,", "Aurangabad(BH)- 824101, Bihar,"]
+    "legal_name": "Acme Retail Private Limited",
+    "cin": "U12345MH2020PTC000000",
+    "gstin": "27AAAAA0000A1Z5",
+    "pan": "AAAAA0000A",
+    "address_lines": ["101 Example Street,", "Mumbai 400069, Maharashtra,"]
   },
   "title": "Receipt",
-  "receipt": { "number": "KD27R-0000000001", "date": "01 JUN 2026", "document_ref": "KD27R-VVVAR" },
-  "order": { "number": "KD27O-HHH8E", "date": "01 Jun 2026" },
+  "receipt": { "number": "RCP-0000000001", "date": "01 JUN 2026", "document_ref": "RCP-REF-0001" },
+  "order": { "number": "ORD-ABC123", "date": "01 Jun 2026" },
   "amount": { "received": "₹848.00", "status": "PAID", "balance": "₹0.00" },
   "received_from": {
-    "name": "Pranay Sinha",
-    "org": "PRANAY KUMAR SINHA",
-    "lines": ["House No. AN-002-0125, Garh Par,", "Aurangabad, Bihar, 824101", "IN"],
-    "gstin": "10CLZPS0601K1ZY"
+    "name": "Sam Buyer",
+    "org": "Sample Buyer LLP",
+    "lines": ["12 Demo Lane,", "Mumbai, Maharashtra, 400050", "IN"],
+    "gstin": "27BBBBB1111B1Z5"
   },
-  "invoice": { "number": "KD27I-0000000001", "date": "01 JUN 2026" },
-  "items": ["Domain transfer for beyyond.in — 1 year"],
+  "invoice": { "number": "INV-0000000001", "date": "01 JUN 2026" },
+  "items": ["Domain transfer for example.in — 1 year"],
   "payment": {
     "rows": [
-      { "lk": "Payment Mode", "lv": "Cash", "rk": "Payment Status", "rv": "PAID" },
-      { "lk": "Amount Received", "lv": "₹848.00", "rk": "Payment Date & Time", "rv": "01 Jun 2026, 23:43 IST" },
-      { "lk": "Balance Due", "lv": "₹0.00", "rk": "Payment Reference", "rv": "Cash" }
+      { "lk": "Payment Mode", "lv": "Card", "rk": "Payment Status", "rv": "PAID" },
+      { "lk": "Amount Received", "lv": "₹848.00", "rk": "Payment Date & Time", "rv": "01 Jun 2026, 12:00 IST" },
+      { "lk": "Balance Due", "lv": "₹0.00", "rk": "Payment Reference", "rv": "TXN12345" }
     ],
     "acknowledgement": "Received with thanks a sum of ₹848.00 against the above order/invoice."
   },
   "footer": {
-    "terms": "Domain registration/renewal services are subject to applicable registry, registrar, and platform terms. For billing or support, email support@kitsy.ai.",
-    "platform": "kitsy.ai",
+    "terms": "Services are subject to the applicable platform, registry, and registrar terms. For billing or support, email support@acme.example.",
+    "platform": "acme.example",
     "disclaimer": "This is a system-generated receipt. No signature required."
   }
 }
