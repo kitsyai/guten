@@ -1,0 +1,35 @@
+name: publish-npm
+
+# Publishes @kitsy/guten to npm when a js/vX.Y.Z tag is pushed (mirrors the
+# cnos publish-node pattern). Needs the NPM_TOKEN repo secret.
+on:
+  push:
+    tags: ["js/v*"]
+
+concurrency:
+  group: publish-npm-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+      - name: Publish @kitsy/guten
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

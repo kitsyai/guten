@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# release.sh — bump guten (go + cli + js) to X.Y.Z in lockstep, commit, and push
+# the module tags that trigger CI: js/vX -> npm publish, cli/vX -> binaries;
+# go/vX makes the Go module resolvable. Mirrors kitsy/cnos's release.sh.
+#
+# Usage:
+#   scripts/release.sh 0.3.0
+#   scripts/release.sh --skip-tests 0.3.0
+#   scripts/release.sh --no-tag 0.3.0     # bump + push main + go tag only
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; cd "$ROOT"
+die()  { echo "ERROR: $*" >&2; exit 1; }
+info() { echo "  → $*"; }
+step() { echo; echo "▸ $*"; }
+
+SKIP_TESTS=false; NO_TAG=false; NEW=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skip-tests) SKIP_TESTS=true; shift ;;
+    --no-tag)     NO_TAG=true;     shift ;;
+    -h|--help)    echo "usage: release.sh [--skip-tests] [--no-tag] <X.Y.Z>"; exit 0 ;;
+    -*)           die "unknown option: $1" ;;
+    *)            [[ -z "$NEW" ]] || die "unexpected argument: $1"; NEW="$1"; shift ;;
+  esac
+done
+[[ "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must be X.Y.Z (got '${NEW:-}')"
+
+OLD=$(sed -n 's/.*"version": "\([^"]*\)".*/\1/p' js/package.json | head -1)
+[[ -n "$OLD" ]] || die "cannot read version from js/package.json"
+[[ "$OLD" != "$NEW" ]] || die "already at $NEW"
+echo; echo "Release: $OLD -> $NEW"
+
+step "Pre-flight"
+[[ "$(git branch --show-current)" == "main" ]] || die "must be on main"
+[[ -z "$(git status --porcelain)" ]] || die "working tree dirty — commit/stash first"
+git fetch --quiet origin main
+[[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] || die "behind origin/main — git pull first"
+info "on main, clean, up to date ✓"
+
+step "Tests"
+if [[ "$SKIP_TESTS" == false ]]; then
+  ( cd go && go test ./... >/dev/null ) && info "go ✓"
+  ( cd cli && go test ./... >/dev/null ) && info "cli ✓"
+  ( cd js && ./node_modules/.bin/vitest run >/dev/null ) && info "js ✓"
+else
+  info "skipped (--skip-tests)"
+fi
+
+step "Bump versions ($OLD -> $NEW)"
+sed -i "s/\"version\": \"${OLD}\"/\"version\": \"${NEW}\"/" js/package.json
+sed -i "s/var version = \"${OLD}\"/var version = \"${NEW}\"/" cli/cmd/guten/main.go
+info "js/package.json + cli/cmd/guten/main.go ✓"
+
+step "Commit + push version bump"
+git add js/package.json cli/cmd/guten/main.go
+git commit -m "chore(release): guten v${NEW}
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+git push origin main
+
+step "Tag + push go/v${NEW} (Go module)"
+git tag "go/v${NEW}"; git push origin "go/v${NEW}"
+
+step "Point cli at guten/go@v${NEW}"
+( cd cli && GOFLAGS=-mod=mod GOPROXY=direct GOPRIVATE='github.com/kitsyai/*' \
+    go get "github.com/kitsyai/guten/go@v${NEW}" && go mod tidy )
+if [[ -n "$(git status --porcelain cli/go.mod cli/go.sum)" ]]; then
+  git add cli/go.mod cli/go.sum
+  git commit -m "chore(cli): guten/go@v${NEW}
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+  git push origin main
+  info "cli deps updated ✓"
+fi
+
+if [[ "$NO_TAG" == true ]]; then
+  echo; echo "Bumped + pushed main + go/v${NEW}. Finish with:"
+  echo "  git tag cli/v${NEW} js/v${NEW} && git push origin cli/v${NEW} js/v${NEW}"
+  exit 0
+fi
+
+step "Tag + push cli/v${NEW} and js/v${NEW} (triggers CI)"
+git tag "cli/v${NEW}"; git tag "js/v${NEW}"
+git push origin "cli/v${NEW}" "js/v${NEW}"
+echo; echo "Done. CI publishes @kitsy/guten to npm (js/v${NEW}) and cli binaries (cli/v${NEW})."
