@@ -1,0 +1,33 @@
+version: 2
+project_name: guten
+
+# The CLI is a submodule (cli/) released on cli/vX.Y.Z tags.
+monorepo:
+  tag_prefix: cli/
+  dir: cli
+
+builds:
+  - id: guten
+    main: ./cmd/guten
+    binary: guten
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - id: guten
+    name_template: "guten_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: kitsyai
+    name: guten

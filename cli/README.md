@@ -27,6 +27,20 @@ Flags: `-t/--template` (source or `@file`), `--manifest` (full Template JSON),
 `--part` (stdout part, default `html`), `-o/--out` (repeatable; the file
 extension picks the part), `--chrome`.
 
+**Theming / overrides** (no template edit needed):
+
+```
+guten export -t @invoice.html -d @data.json --theme @brand.json -o out.pdf
+guten export -t @invoice.html -d @data.json --set theme.accent=#0ea5e9 -o out.pdf
+guten export -t @invoice.html -d @data.json --css @brand.css -o out.pdf
+```
+
+- `--theme @file|JSON` — merged into the data under `theme` (template reads
+  `theme.*` for fonts/colors/spacing).
+- `--set key=value` — a single dotted-path override (repeatable).
+- `--css @file|"…"` — extra CSS injected before `</head>` so it wins the cascade
+  (repeatable). Great for `@font-face`, layout tweaks, or hiding blocks.
+
 ## PDF
 
 `-o file.pdf` renders the `html` part and converts it with a **headless

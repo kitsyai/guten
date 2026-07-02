@@ -3,22 +3,33 @@
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: A4; margin: 14mm 14mm 12mm; }
+  /* Theme: every visual choice is a variable with a default, overridable via
+     the `theme` data (--theme / --set) or a --css override. */
+  :root {
+    --font: {{ theme.font_family | default: "'Noto Sans', Arial, Helvetica, sans-serif" }};
+    --fs: {{ theme.font_size | default: "10px" }};
+    --text: {{ theme.text_color | default: "#111" }};
+    --muted: {{ theme.muted_color | default: "#444" }};
+    --rule: {{ theme.rule_color | default: "#999" }};
+    --accent: {{ theme.accent_color | default: "#111" }};
+    --chit: {{ theme.chit_border_color | default: "#888" }};
+  }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm 14mm 12mm" }}; }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: "Noto Sans", Arial, Helvetica, sans-serif;
-    font-size: 10px;
-    color: #111;
+    font-family: var(--font);
+    font-size: var(--fs);
+    color: var(--text);
     line-height: 1.35;
   }
   .row { display: flex; justify-content: space-between; }
-  .rule { border-bottom: 1px solid #999; margin: 8px 0; }
-  .muted { color: #444; }
+  .rule { border-bottom: 1px solid var(--rule); margin: 8px 0; }
+  .muted { color: var(--muted); }
 
   /* Header */
-  .supplier-name { font-size: 15px; font-weight: 700; }
-  .doc-title { font-size: 15px; font-weight: 700; }
+  .supplier-name { font-size: 15px; font-weight: 700; color: var(--accent); }
+  .doc-title { font-size: 15px; font-weight: 700; color: var(--accent); }
   .meta { font-size: 9px; }
   .meta div { white-space: nowrap; }
   .right { text-align: right; }
@@ -50,7 +61,7 @@
   .totals .grand { font-weight: 700; font-size: 11px; border-top: 1px solid #999; margin-top: 3px; padding-top: 4px; }
 
   /* Payment chit */
-  .chit { border: 1px dashed #888; padding: 8px 10px; margin-top: 22px; }
+  .chit { border: 1px dashed var(--chit); padding: 8px 10px; margin-top: 22px; }
   .chit h4 { margin: 0 0 5px; font-size: 11px; font-weight: 700; }
   .chit .grid { display: flex; flex-wrap: wrap; }
   .chit .cell { width: 50%; display: flex; padding: 2px 0; }

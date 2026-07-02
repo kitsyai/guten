@@ -34,11 +34,15 @@ Flags:
       --part       part to render for 'render'/stdout (default: html)
   -o, --out        output file (repeatable); part inferred from extension:
                    .html/.htm -> html, .txt -> text, .pdf -> html rendered then converted
+      --theme      @file|JSON merged into the data under "theme" (fonts/colors/…)
+      --set        key=value override into the data (repeatable), e.g. theme.accent=#0ea5e9
+      --css        extra CSS (@file or literal) injected before </head> to override styling (repeatable)
       --chrome     Chrome/Edge/Chromium path for PDF (else auto-detected; env GUTEN_CHROME)
 
 Examples:
   guten render -t 'Hi {{ name }}' -d '{"name":"Ada"}'
   guten export -t @invoice.html -d @invoice.json -o invoice.html -o invoice.pdf
+  guten export -t @invoice.html -d @invoice.json --set theme.accent=#0ea5e9 --css @brand.css -o out.pdf
 `
 
 func main() {
@@ -76,6 +80,9 @@ type opts struct {
 	part     string
 	outs     []string
 	chrome   string
+	theme    string
+	sets     []string
+	css      []string
 }
 
 func parseOpts(args []string) (opts, error) {
@@ -105,6 +112,18 @@ func parseOpts(args []string) (opts, error) {
 			var v string
 			if v, err = next(); err == nil {
 				o.outs = append(o.outs, v)
+			}
+		case "--theme":
+			o.theme, err = next()
+		case "--set":
+			var v string
+			if v, err = next(); err == nil {
+				o.sets = append(o.sets, v)
+			}
+		case "--css":
+			var v string
+			if v, err = next(); err == nil {
+				o.css = append(o.css, v)
 			}
 		case "--chrome":
 			o.chrome, err = next()
@@ -195,11 +214,94 @@ func runRender(o opts) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	data, err := loadData(o.data)
+	data, err := renderData(o)
 	if err != nil {
 		return "", err
 	}
-	return e.RenderPart(name, o.part, data)
+	out, err := e.RenderPart(name, o.part, data)
+	if err != nil {
+		return "", err
+	}
+	if o.part == guten.PartHTML {
+		return injectCSS(out, o.css)
+	}
+	return out, nil
+}
+
+// renderData builds the render data: base --data, then --theme merged under
+// "theme", then --set key=value overrides applied by dotted path.
+func renderData(o opts) (map[string]any, error) {
+	data, err := loadData(o.data)
+	if err != nil {
+		return nil, err
+	}
+	if o.theme != "" {
+		raw, err := loadArg(o.theme)
+		if err != nil {
+			return nil, err
+		}
+		var th map[string]any
+		if err := json.Unmarshal([]byte(raw), &th); err != nil {
+			return nil, fmt.Errorf("parse theme: %w", err)
+		}
+		base, _ := data["theme"].(map[string]any)
+		if base == nil {
+			base = map[string]any{}
+		}
+		for k, v := range th {
+			base[k] = v
+		}
+		data["theme"] = base
+	}
+	for _, s := range o.sets {
+		k, v, ok := strings.Cut(s, "=")
+		if !ok {
+			return nil, fmt.Errorf("--set expects key=value, got %q", s)
+		}
+		setPath(data, strings.TrimSpace(k), v)
+	}
+	return data, nil
+}
+
+func setPath(m map[string]any, dotted, value string) {
+	keys := strings.Split(dotted, ".")
+	cur := m
+	for i, k := range keys {
+		if i == len(keys)-1 {
+			cur[k] = value
+			return
+		}
+		next, ok := cur[k].(map[string]any)
+		if !ok {
+			next = map[string]any{}
+			cur[k] = next
+		}
+		cur = next
+	}
+}
+
+// injectCSS appends CLI-supplied CSS as a <style> block before </head> so it
+// wins the cascade over the template's own styles. It is template-agnostic.
+func injectCSS(htmlStr string, cssBlocks []string) (string, error) {
+	if len(cssBlocks) == 0 {
+		return htmlStr, nil
+	}
+	var b strings.Builder
+	b.WriteString("<style>\n")
+	for _, c := range cssBlocks {
+		s, err := loadArg(c)
+		if err != nil {
+			return "", err
+		}
+		b.WriteString(s)
+		b.WriteString("\n")
+	}
+	b.WriteString("</style>")
+	inject := b.String()
+	if idx := strings.Index(strings.ToLower(htmlStr), "</head>"); idx >= 0 {
+		return htmlStr[:idx] + inject + htmlStr[idx:], nil
+	}
+	return inject + htmlStr, nil
 }
 
 func cmdRender(args []string) error {
@@ -224,7 +326,7 @@ func runExport(o opts) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := loadData(o.data)
+	data, err := renderData(o)
 	if err != nil {
 		return nil, err
 	}
@@ -237,6 +339,10 @@ func runExport(o opts) ([]string, error) {
 			if rerr != nil {
 				return written, fmt.Errorf("render html for pdf: %w", rerr)
 			}
+			htmlStr, rerr = injectCSS(htmlStr, o.css)
+			if rerr != nil {
+				return written, rerr
+			}
 			b, cerr := pdfconv.NewChrome(o.chrome).ToPDF(context.Background(), []byte(htmlStr))
 			if cerr != nil {
 				return written, cerr
@@ -246,6 +352,11 @@ func runExport(o opts) ([]string, error) {
 			str, rerr := e.RenderPart(name, part, data)
 			if rerr != nil {
 				return written, rerr
+			}
+			if part == guten.PartHTML {
+				if str, rerr = injectCSS(str, o.css); rerr != nil {
+					return written, rerr
+				}
 			}
 			payload = []byte(str)
 		}

@@ -67,3 +67,41 @@ func TestRunExportPDF(t *testing.T) {
 		t.Fatalf("not a pdf (%d bytes)", len(b))
 	}
 }
+
+func TestRenderDataThemeAndSet(t *testing.T) {
+	o := opts{
+		data:  `{"theme":{"accent_color":"#111"},"name":"x"}`,
+		theme: `{"font_family":"Georgia"}`,
+		sets:  []string{"theme.accent_color=#0ea5e9", "footer.platform=acme.com"},
+	}
+	d, err := renderData(o)
+	if err != nil {
+		t.Fatal(err)
+	}
+	th := d["theme"].(map[string]any)
+	if th["font_family"] != "Georgia" {
+		t.Fatalf("theme merge failed: %v", th)
+	}
+	if th["accent_color"] != "#0ea5e9" {
+		t.Fatalf("--set override failed: %v", th)
+	}
+	if f := d["footer"].(map[string]any); f["platform"] != "acme.com" {
+		t.Fatalf("nested --set failed: %v", f)
+	}
+}
+
+func TestInjectCSS(t *testing.T) {
+	out, err := injectCSS("<html><head><title>x</title></head><body>y</body></html>", []string{"body{color:red}"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "body{color:red}") {
+		t.Fatalf("css missing: %s", out)
+	}
+	if strings.Index(out, "body{color:red}") > strings.Index(out, "</head>") {
+		t.Fatal("css must be injected before </head>")
+	}
+	if same, _ := injectCSS("<p>x</p>", nil); same != "<p>x</p>" {
+		t.Fatal("no css should be a no-op")
+	}
+}
