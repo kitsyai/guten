@@ -1,0 +1,80 @@
+{
+  "supplier": {
+    "legal_name": "HEYPKV INNOVATIONS PRIVATE LIMITED",
+    "cin": "U62011BR2025PTC078383",
+    "gstin": "10AAICH1439H1ZZ",
+    "pan": "AAICH1439H",
+    "address_lines": [
+      "HOUSE NO AN 002 0125, BIRATPUR GARH,",
+      "Aurangabad (BH), Aurangabad,",
+      "Aurangabad(BH)- 824101, Bihar,"
+    ],
+    "phone": "+91 8055198838",
+    "email": "hello@kitsy.ai"
+  },
+  "invoice": {
+    "title": "Tax Invoice",
+    "number": "KD27I-0000000001",
+    "date": "01 JUN 2026",
+    "place_of_supply": "Bihar",
+    "state_code": "10",
+    "document_ref": "KD27I-VVVAR"
+  },
+  "order": { "number": "KD27O-HHH8E", "date": "01 Jun 2026" },
+  "totals_summary": { "total": "₹848.00", "paid": "₹848.00", "balance": "₹0.00" },
+  "bill_to": {
+    "name": "Pranay Sinha",
+    "org": "PRANAY KUMAR SINHA",
+    "lines": [
+      "House No. AN-002-0125, Garh Par,",
+      "Mohalla Biratpur, Aurangabad",
+      "Aurangabad, Bihar, 824101",
+      "IN"
+    ],
+    "gstin": "10CLZPS0601K1ZY"
+  },
+  "ship_to": {
+    "name": "Pranay Sinha",
+    "org": "PRANAY KUMAR SINHA",
+    "lines": [
+      "House No. AN-002-0125, Garh Par,",
+      "Mohalla Biratpur, Aurangabad",
+      "Aurangabad, Bihar, 824101",
+      "IN"
+    ],
+    "gstin": "10CLZPS0601K1ZY"
+  },
+  "items": [
+    {
+      "description": "Domain transfer for beyyond.in — 1 year",
+      "sac": "998315",
+      "qty": "1",
+      "duration": "1 yr",
+      "listed": "₹878.00",
+      "discount": "-₹159.00",
+      "taxable": "₹719.00",
+      "gst": "₹129.42",
+      "total": "₹848.42"
+    }
+  ],
+  "totals": [
+    { "label": "Subtotal", "value": "₹719.00" },
+    { "label": "CGST 9%", "value": "₹64.71" },
+    { "label": "SGST 9%", "value": "₹64.71" },
+    { "label": "Round Off", "value": "-₹0.42" }
+  ],
+  "grand_total": { "label": "Total Invoice Value", "value": "₹848.00" },
+  "payment": {
+    "rows": [
+      { "lk": "Payment Mode", "lv": "Cash", "rk": "Payment Status", "rv": "PAID" },
+      { "lk": "Amount Received", "lv": "₹848.00", "rk": "Payment Date & Time", "rv": "01 Jun 2026, 23:43 IST" },
+      { "lk": "Balance Due", "lv": "₹0.00", "rk": "Payment Reference", "rv": "Cash" }
+    ],
+    "acknowledgement": "Received with thanks a sum of ₹848.00 against this invoice. This document also serves as receipt for the payment."
+  },
+  "footer": {
+    "terms": "Domain registration/renewal services are subject to applicable registry, registrar, and platform terms. Once successfully registered, renewed, or transferred, domain orders are generally non-cancellable and non-refundable, except where required by applicable law or registry/registrar policy. For billing, service, or domain-related support, email us at support@kitsy.ai.",
+    "platform": "kitsy.ai",
+    "disclaimer": "This is a system-generated tax invoice. No signature required."
+  }
+}
