@@ -1,0 +1,70 @@
+{
+  "supplier": {
+    "legal_name": "Acme Retail Private Limited",
+    "cin": "U12345MH2020PTC000000",
+    "gstin": "27AAAAA0000A1Z5",
+    "pan": "AAAAA0000A",
+    "address_lines": [
+      "101 Example Street,",
+      "Andheri East,",
+      "Mumbai 400069, Maharashtra,"
+    ],
+    "phone": "+91 90000 00000",
+    "email": "billing@acme.example"
+  },
+  "invoice": {
+    "title": "Tax Invoice",
+    "number": "INV-0000000001",
+    "date": "01 JUN 2026",
+    "place_of_supply": "Maharashtra",
+    "state_code": "27",
+    "document_ref": "INV-REF-0001"
+  },
+  "order": { "number": "ORD-ABC123", "date": "01 Jun 2026" },
+  "totals_summary": { "total": "₹848.00", "paid": "₹848.00", "balance": "₹0.00" },
+  "bill_to": {
+    "name": "Sam Buyer",
+    "org": "Sample Buyer LLP",
+    "lines": ["12 Demo Lane,", "Bandra West,", "Mumbai, Maharashtra, 400050", "IN"],
+    "gstin": "27BBBBB1111B1Z5"
+  },
+  "ship_to": {
+    "name": "Sam Buyer",
+    "org": "Sample Buyer LLP",
+    "lines": ["12 Demo Lane,", "Bandra West,", "Mumbai, Maharashtra, 400050", "IN"],
+    "gstin": "27BBBBB1111B1Z5"
+  },
+  "items": [
+    {
+      "description": "Domain transfer for example.in — 1 year",
+      "sac": "998315",
+      "qty": "1",
+      "duration": "1 yr",
+      "listed": "₹878.00",
+      "discount": "-₹159.00",
+      "taxable": "₹719.00",
+      "gst": "₹129.42",
+      "total": "₹848.42"
+    }
+  ],
+  "totals": [
+    { "label": "Subtotal", "value": "₹719.00" },
+    { "label": "CGST 9%", "value": "₹64.71" },
+    { "label": "SGST 9%", "value": "₹64.71" },
+    { "label": "Round Off", "value": "-₹0.42" }
+  ],
+  "grand_total": { "label": "Total Invoice Value", "value": "₹848.00" },
+  "payment": {
+    "rows": [
+      { "lk": "Payment Mode", "lv": "Card", "rk": "Payment Status", "rv": "PAID" },
+      { "lk": "Amount Received", "lv": "₹848.00", "rk": "Payment Date & Time", "rv": "01 Jun 2026, 12:00 IST" },
+      { "lk": "Balance Due", "lv": "₹0.00", "rk": "Payment Reference", "rv": "TXN12345" }
+    ],
+    "acknowledgement": "Received with thanks a sum of ₹848.00 against this invoice. This document also serves as receipt for the payment."
+  },
+  "footer": {
+    "terms": "Services are subject to the applicable platform, registry, and registrar terms. For billing or support, email support@acme.example.",
+    "platform": "acme.example",
+    "disclaimer": "This is a system-generated tax invoice. No signature required."
+  }
+}

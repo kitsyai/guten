@@ -1,0 +1,7 @@
+{
+  "name": "invoice_glass",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Layered glass-style GST invoice with airy cards and soft translucent panels.",
+  "parts": { "html": "@html.liquid" }
+}

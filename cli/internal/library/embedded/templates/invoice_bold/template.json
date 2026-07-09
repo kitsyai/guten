@@ -1,0 +1,7 @@
+{
+  "name": "invoice_bold",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "High-contrast GST invoice with a bold masthead and strong totals emphasis.",
+  "parts": { "html": "@html.liquid" }
+}

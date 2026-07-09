@@ -1,0 +1,7 @@
+{
+  "name": "invoice_sunrise",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Warm gradient GST invoice with rounded hospitality-style sections.",
+  "parts": { "html": "@html.liquid" }
+}
