@@ -34,6 +34,58 @@ e.register({
 Pure ESM, no runtime network calls; bundles cleanly (liquidjs runs in the
 browser). Ship it in a web app for offline-first rendering.
 
+### Script tag (UMD)
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@kitsy/guten@<version>/dist/index.umd.js"></script>
+<script>
+  const e = Guten.newWithBuiltins();
+  const rendered = e.render("basic_notification", {
+    title: "Welcome",
+    name: "Asha",
+    body: "Your account is ready.",
+    brand_name: "Acme",
+  });
+  console.log(rendered.parts.html);
+</script>
+```
+
+## Template assets on jsDelivr
+
+Template registries are consumed from the dedicated template package so Node consumers can
+list or cache them directly from CDN:
+
+- `@kitsy/gutenkit` templates: `https://cdn.jsdelivr.net/npm/@kitsy/gutenkit@<version>/templates/index.json`
+- fallback path (if npm package not yet published): `https://cdn.jsdelivr.net/gh/kitsyai/gutenkit@v<version>/templates/index.json`
+
+The entries point to `.json` manifests and `.liquid` parts in the same tree:
+
+```
+.../templates/index.json
+.../templates/<name>/template.json
+.../templates/<name>/<part>.liquid
+```
+
+You can also use the helper functions:
+
+```ts
+import {
+  templateRegistryFallbackUrl,
+  templateAssetFallbackUrl,
+  templateRegistryUrl,
+  fetchTemplateRegistry,
+  templateAssetUrl,
+} from "@kitsy/guten";
+
+const registry = await fetchTemplateRegistry("gutenkit", { version: "latest" });
+for (const t of registry.templates) {
+  console.log(t.name, templateAssetUrl("gutenkit", `${t.path}/template.json`));
+}
+
+templateRegistryFallbackUrl("gutenkit", { version: "0.2.4" });
+templateAssetFallbackUrl("gutenkit", "invoice/template.json", { version: "0.2.4" });
+```
+
 ## Parity (Go ≡ JS)
 
 `pnpm test` runs the shared corpus at [`../spec/corpus/`](../spec/corpus) and
@@ -64,5 +116,5 @@ offline-first.
 pnpm install          # if prompted, allow esbuild's build once: pnpm approve-builds
 pnpm typecheck        # tsc --noEmit
 pnpm test             # vitest (unit + parity corpus)
-pnpm build            # tsup -> dist (ESM + CJS + d.ts)
+pnpm build            # tsup -> dist (ESM + CJS + UMD + d.ts)
 ```
