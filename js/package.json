@@ -54,7 +54,7 @@
     }
   },
   "devDependencies": {
-    "@kitsy/gutenkit": "0.2.4",
+    "@kitsy/gutenkit": "0.2.6",
     "@types/node": "^22.10.0",
     "@playwright/test": "^1.54.1",
     "tsup": "^8.3.5",

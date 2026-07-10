@@ -18,7 +18,7 @@ interface Registry {
   templates: TemplateEntry[];
 }
 
-export const GUTENKIT_BASELINE_VERSION = "0.2.4";
+export const GUTENKIT_BASELINE_VERSION = "0.2.6";
 
 function gutenkitRoot(): string {
   const explicit = process.env.GUTENKIT_TEMPLATE_PATH;

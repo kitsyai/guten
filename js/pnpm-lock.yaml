@@ -13,8 +13,8 @@ importers:
         version: 10.27.1
     devDependencies:
       '@kitsy/gutenkit':
-        specifier: 0.2.4
-        version: 0.2.4
+        specifier: 0.2.6
+        version: 0.2.6
       '@playwright/test':
         specifier: ^1.54.1
         version: 1.61.1
@@ -346,8 +346,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kitsy/gutenkit@0.2.4':
-    resolution: {integrity: sha512-QSO9t3llCILBhG5OSz9pP+qou4233z3+e7dVuvwyegoWa4jjigBdXjkHY8DNhUySUNL0aofDDIUbHORuk3lYpw==}
+  '@kitsy/gutenkit@0.2.6':
+    resolution: {integrity: sha512-0xCDjfTSboWOOnB+kCY/8gN0YKeWtKCPbwEXdycT73yoeYj0CMHT0FBNYWEw3+qPco3Oi5iLHriwtOib3pdgXg==}
 
   '@playwright/test@1.61.1':
     resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
@@ -1080,7 +1080,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kitsy/gutenkit@0.2.4': {}
+  '@kitsy/gutenkit@0.2.6': {}
 
   '@playwright/test@1.61.1':
     dependencies:
