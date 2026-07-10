@@ -25,6 +25,8 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
+    "test:node": "vitest run -t \"gutenkit workflow \\(node\"",
+    "test:browser": "vitest run -t \"browser-like via UMD\"",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "tsup"
   },
@@ -32,6 +34,7 @@
     "liquidjs": "^10.16.0"
   },
   "devDependencies": {
+    "@kitsy/gutenkit": "0.2.4",
     "@types/node": "^22.10.0",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3",

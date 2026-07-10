@@ -6,6 +6,7 @@ import {
   templateRegistryFallbackUrl,
   templateRegistryUrl,
 } from "../src/template-library.js";
+import packageInfo from "../package.json" with { type: "json" };
 
 describe("template library helpers", () => {
   test("builds jsDelivr registry urls", () => {
@@ -65,5 +66,19 @@ describe("template library helpers", () => {
 
     const registry = await fetchTemplateRegistry("gutenkit", { fetchImpl: fakeFetch });
     expect(registry).toEqual(payload);
+  });
+
+  test("exposes UMD CDN entry points", () => {
+    expect(packageInfo.unpkg).toBe("./dist/index.umd.js");
+    expect(packageInfo.jsdelivr).toBe("./dist/index.umd.js");
+  });
+
+  test("builds unpkg URLs for templates", () => {
+    expect(templateRegistryUrl("gutenkit", { host: "https://unpkg.com", version: "0.2.4" })).toBe(
+      "https://unpkg.com/@kitsy/gutenkit@0.2.4/templates/index.json",
+    );
+    expect(templateAssetUrl("gutenkit", "templates/invoice/template.json", { host: "https://unpkg.com", version: "0.2.4" })).toBe(
+      "https://unpkg.com/@kitsy/gutenkit@0.2.4/templates/invoice/template.json",
+    );
   });
 });
