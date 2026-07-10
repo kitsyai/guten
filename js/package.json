@@ -1,7 +1,7 @@
 {
   "name": "@kitsy/guten",
   "version": "0.2.6",
-  "description": "Multi-format, multi-runtime templating engine (Liquid) Ã¢â‚¬â€ Node + browser. The JS runtime of kitsyai/guten.",
+  "description": "Multi-format, multi-runtime templating engine (Liquid) for Node and browser. The JS runtime of kitsyai/guten.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -15,6 +15,12 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.umd.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs",
+      "default": "./dist/react.umd.js"
     }
   },
   "files": [
@@ -35,6 +41,18 @@
   "dependencies": {
     "liquidjs": "^10.16.0"
   },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@kitsy/gutenkit": "0.2.4",
     "@types/node": "^22.10.0",
@@ -51,3 +69,4 @@
     "directory": "js"
   }
 }
+

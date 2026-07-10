@@ -50,6 +50,42 @@ browser). Ship it in a web app for offline-first rendering.
 </script>
 ```
 
+## React surface (`@kitsy/guten/react`)
+
+For React users, import from the optional subpath and only include this package
+when used:
+
+```ts
+import { GutenPDF, GutenView, useGuten } from "@kitsy/guten/react";
+```
+
+You must provide `react` and `react-dom` in your app:
+
+```bash
+npm i react react-dom
+```
+
+Use the helper for direct bootstrap:
+
+```ts
+import { GutenReact } from "@kitsy/guten/react";
+
+GutenReact.render("#mount", "pdf", "invoice_bold", {
+  data: { name: "Asha", invoice_number: "1001" },
+});
+```
+
+UMD entry is also available:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@kitsy/guten@<version>/dist/react.umd.js"></script>
+<script>
+  window.GutenReact.render("#mount", "html", "basic_notification", {
+    data: { title: "Welcome", name: "Asha" },
+  });
+</script>
+```
+
 ## Template assets on jsDelivr
 
 Template registries are consumed from the dedicated template package so Node consumers can

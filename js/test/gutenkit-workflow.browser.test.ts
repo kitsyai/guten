@@ -18,6 +18,7 @@ interface RuntimeLike {
   newWithBuiltins: () => {
     register: (template: Record<string, unknown>) => void;
     render: (name: string, data?: Record<string, unknown>) => {
+      template: string;
       parts: Record<string, string>;
     };
   };
