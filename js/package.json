@@ -24,7 +24,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
-    "test": "vitest run",
+    "test": "vitest run --exclude browser-tests",
     "test:node": "vitest run -t \"gutenkit workflow \\(node\"",
     "test:browser:vm": "npm run build && vitest run test -t \"browser-like via UMD\" --exclude browser-tests",
     "test:browser:e2e": "npm run build && npx playwright test",
