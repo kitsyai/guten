@@ -18,13 +18,13 @@ import (
 	guten "github.com/kitsyai/guten/go"
 )
 
-var version = "0.2.6"
+var version = "0.2.7"
 
-const usageText = `guten ` + `Ã¢â‚¬â€ templating engine CLI
+const usageText = `guten ` + `ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â templating engine CLI
 
 Usage:
   guten render  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] [--part html]
-  guten export  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] -o <file> [-o Ã¢â‚¬Â¦]
+  guten export  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] -o <file> [-o ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦]
   guten lib     list | show <name> | pull        [--lib-dir <dir>]
   guten builtins
   guten version
@@ -40,7 +40,7 @@ Flags:
       --part       part to render for 'render'/stdout (default: html)
   -o, --out        output file (repeatable); part inferred from extension:
                    .html/.htm -> html, .txt -> text, .pdf -> html rendered then converted
-      --theme      @file|JSON merged into the data under "theme" (fonts/colors/Ã¢â‚¬Â¦)
+      --theme      @file|JSON merged into the data under "theme" (fonts/colors/ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦)
       --set        key=value override into the data (repeatable), e.g. theme.accent=#0ea5e9
       --css        extra CSS (@file or literal) injected before </head> to override styling (repeatable)
       --header     fill data.slots.header (@file or literal) for inheritance-aware templates
@@ -167,7 +167,7 @@ func parseOpts(args []string) (opts, error) {
 }
 
 // loadArg returns s, or the contents of the file when s begins with '@'. A
-// leading UTF-8 BOM is stripped Ã¢â‚¬â€ Windows editors and PowerShell's
+// leading UTF-8 BOM is stripped ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Windows editors and PowerShell's
 // `Out-File -Encoding utf8` add one, which otherwise breaks JSON parsing and
 // leaks a stray character into rendered output.
 func loadArg(s string) (string, error) {
