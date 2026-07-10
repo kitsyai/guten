@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "templates": [
+    { "name": "basic_notification", "kind": "email", "path": "basic_notification", "description": "Minimal template for baseline email-like rendering." },
+    { "name": "invoice", "kind": "document", "path": "invoice", "description": "GST tax invoice (India)." },
+    { "name": "invoice_modern", "kind": "document", "path": "invoice_modern", "description": "Modern invoice with bold summary cards and clean accent rails." },
+    { "name": "invoice_minimal", "kind": "document", "path": "invoice_minimal", "description": "Minimal invoice with airy spacing and understated neutral styling." },
+    { "name": "invoice_serif", "kind": "document", "path": "invoice_serif", "description": "Editorial serif invoice with premium print-friendly typography." },
+    { "name": "invoice_bold", "kind": "document", "path": "invoice_bold", "description": "High-contrast invoice with strong bands and emphasized totals." },
+    { "name": "invoice_midnight", "kind": "document", "path": "invoice_midnight", "description": "Deep slate invoice with dark hero header and luminous detail cards." },
+    { "name": "invoice_sunrise", "kind": "document", "path": "invoice_sunrise", "description": "Warm gradient invoice with rounded sections and hospitality styling." },
+    { "name": "invoice_glass", "kind": "document", "path": "invoice_glass", "description": "Soft glassmorphism-inspired invoice with layered panels and soft borders." },
+    { "name": "invoice_studio", "kind": "document", "path": "invoice_studio", "description": "Studio-style invoice with a branded left rail and modular content blocks." },
+    { "name": "invoice_ledger", "kind": "document", "path": "invoice_ledger", "description": "Accounting-ledger invoice with ruled tables and monospace metadata." },
+    { "name": "receipt", "kind": "document", "path": "receipt", "description": "Payment receipt (India)." },
+    { "name": "statement", "kind": "document", "path": "statement", "description": "Account statement with transactions table." },
+    { "name": "otp", "kind": "email", "path": "otp", "description": "One-time passcode / verification code email." },
+    { "name": "verification", "kind": "email", "path": "verification", "description": "Email-address verification email." },
+    { "name": "password_reset", "kind": "email", "path": "password_reset", "description": "Password reset email with a time-limited link." },
+    { "name": "welcome", "kind": "email", "path": "welcome", "description": "Welcome / onboarding email with a CTA." },
+    { "name": "notification", "kind": "email", "path": "notification", "description": "Generic transactional notification email." }
+  ]
+}

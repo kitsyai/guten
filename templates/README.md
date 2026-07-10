@@ -1,10 +1,14 @@
 # templates/
 
-Batteries-included template sources live here as the engine grows. In v0 the
-starter template (`basic_notification`) is defined in Go in
-[`../go/builtins.go`](../go/builtins.go) so it ships compiled with the module;
-this directory is the home for file-loaded templates (shared across the Go and
-JS runtimes) once the loader and parity corpus land.
+`templates/internal` is the shared built-in template source of truth for the guten
+runtimes:
 
-Templates are **brand-neutral** and fully parameterised by data — guten carries
-no business, brand, or channel knowledge. See [`../spec/template-manifest.md`](../spec/template-manifest.md).
+- CLI offline snapshot
+- Go builtin templates (`NewWithBuiltins`)
+- JS built-in template bootstrap and template resolution
+
+Each entry is a manifest directory with `template.json` plus optional
+`theme.json` / `sample.json` / part source files.
+
+The templates are **brand-neutral** and fully parameterised by data â€” guten
+does not carry business, brand, or channel knowledge.

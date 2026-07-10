@@ -1,12 +1,12 @@
 // Package library resolves guten template bundles across a Maven/Gradle-style
 // precedence: an explicit --lib-dir, then the user's ~/.kitsy/guten/user, then
 // the gutenkit cache ~/.kitsy/guten/gutenkit (synced with Pull), then the
-// snapshot embedded in the binary. A bundle is a directory with a template.json
+// bundled internal templates. A bundle is a directory with a template.json
 // manifest, optional theme.json / sample.json, and part source files.
 package library
 
 import (
-	"embed"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -20,11 +20,10 @@ import (
 	guten "github.com/kitsyai/guten/go"
 )
 
-//go:embed all:embedded
-var embeddedFS embed.FS
-
 // GutenkitRepo is the online tier synced by Pull.
 const GutenkitRepo = "https://github.com/kitsyai/gutenkit.git"
+const gutenkitPrefix = "@gutenkit/"
+const builtinSource = "builtin"
 
 // Bundle is a loaded template bundle.
 type Bundle struct {
@@ -48,6 +47,29 @@ type Entry struct {
 	Kind        string
 	Description string
 	Source      string
+}
+
+type templateRef struct {
+	name     string
+	gutenkit bool
+}
+
+func parseTemplateRef(raw string) (templateRef, error) {
+	if strings.TrimSpace(raw) == "" {
+		return templateRef{}, fmt.Errorf("template name is empty")
+	}
+	raw = strings.TrimSpace(raw)
+	if !strings.HasPrefix(raw, "@") {
+		return templateRef{name: raw}, nil
+	}
+	if !strings.HasPrefix(raw, gutenkitPrefix) {
+		return templateRef{}, fmt.Errorf("unsupported template prefix in %q", raw)
+	}
+	name := strings.TrimPrefix(raw, gutenkitPrefix)
+	if name == "" || strings.Contains(name, "/") {
+		return templateRef{}, fmt.Errorf("invalid template ref %q", raw)
+	}
+	return templateRef{name: name, gutenkit: true}, nil
 }
 
 func baseDir() string {
@@ -81,20 +103,98 @@ func roots(libDir string) []root {
 	rs = append(rs,
 		root{os.DirFS(userDir()), "templates", "user"},
 		root{os.DirFS(GutenkitDir()), "templates", "gutenkit"},
-		root{embeddedFS, "embedded/templates", "embedded"},
 	)
 	return rs
 }
 
 // LoadBundle resolves and loads a template bundle by name.
 func LoadBundle(name, libDir string) (Bundle, error) {
+	ref, err := parseTemplateRef(name)
+	if err != nil {
+		return Bundle{}, err
+	}
+	if ref.gutenkit {
+		return loadFromGutenkit(ref.name, libDir)
+	}
 	for _, r := range roots(libDir) {
+		dir := path.Join(r.base, ref.name)
+		if _, err := fs.Stat(r.fsys, path.Join(dir, "template.json")); err == nil {
+			return loadFrom(r.fsys, dir)
+		}
+	}
+	return loadFromBuiltins(ref.name)
+}
+
+func loadFromGutenkit(name, libDir string) (Bundle, error) {
+	search := []root{
+		{os.DirFS(GutenkitDir()), "templates", "gutenkit"},
+	}
+	if libDir != "" {
+		search = append([]root{
+			{os.DirFS(libDir), "templates", "lib-dir"},
+			{os.DirFS(libDir), ".", "lib-dir"},
+		}, search...)
+	}
+	for _, r := range search {
 		dir := path.Join(r.base, name)
 		if _, err := fs.Stat(r.fsys, path.Join(dir, "template.json")); err == nil {
 			return loadFrom(r.fsys, dir)
 		}
 	}
-	return Bundle{}, fmt.Errorf("template %q not found (searched --lib-dir, ~/.kitsy/guten/user, ~/.kitsy/guten/gutenkit, embedded)", name)
+
+	pulled, err := Pull()
+	if err != nil {
+		return Bundle{}, err
+	}
+	gutenkitRoot := path.Join("templates", name)
+	if _, err := os.Stat(filepath.Join(pulled, gutenkitRoot, "template.json")); err == nil {
+		return loadFrom(os.DirFS(pulled), gutenkitRoot)
+	}
+	return Bundle{}, fmt.Errorf("template %q not found in @gutenkit path", name)
+}
+
+func loadFromBuiltins(name string) (Bundle, error) {
+	for _, entry := range builtinTemplateCatalog {
+		if entry.Name != name {
+			continue
+		}
+		t := guten.Template{
+			Name:     entry.Name,
+			Renderer: entry.Renderer,
+			Extends:  entry.Extends,
+			Parts:    copyTemplateParts(entry.Parts),
+		}
+		b := Bundle{Template: t}
+		if err := parseBundledJSON(entry.Theme, &b.Theme, "builtin template theme"); err != nil {
+			return Bundle{}, err
+		}
+		if err := parseBundledJSON(entry.Sample, &b.Sample, "builtin template sample"); err != nil {
+			return Bundle{}, err
+		}
+		return b, nil
+	}
+	return Bundle{}, fmt.Errorf("template %q not found (searched --lib-dir, ~/.kitsy/guten/user, ~/.kitsy/guten/gutenkit, %s)", name, builtinSource)
+}
+
+func parseBundledJSON(raw json.RawMessage, dst *map[string]any, label string) error {
+	if len(bytes.TrimSpace(raw)) == 0 || bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+		return nil
+	}
+	if err := json.Unmarshal(raw, dst); err != nil {
+		return fmt.Errorf("%s: %w", label, err)
+	}
+	return nil
+}
+
+func copyTemplateParts(parts map[string]string) map[string]string {
+	if parts == nil {
+		return nil
+	}
+	out := make(map[string]string, len(parts))
+	for k, v := range parts {
+		out[k] = v
+	}
+	return out
 }
 
 func loadFrom(fsys fs.FS, dir string) (Bundle, error) {
@@ -150,6 +250,13 @@ func List(libDir string) []Entry {
 			seen[de.Name()] = true
 			out = append(out, Entry{Name: de.Name(), Kind: m.Kind, Description: m.Description, Source: r.src})
 		}
+	}
+	for _, entry := range builtinTemplateCatalog {
+		if seen[entry.Name] {
+			continue
+		}
+		seen[entry.Name] = true
+		out = append(out, Entry{Name: entry.Name, Kind: entry.Kind, Description: entry.Description, Source: builtinSource})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out

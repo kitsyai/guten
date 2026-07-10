@@ -26,7 +26,9 @@
     "build": "tsup",
     "test": "vitest run",
     "test:node": "vitest run -t \"gutenkit workflow \\(node\"",
-    "test:browser": "vitest run -t \"browser-like via UMD\"",
+    "test:browser:vm": "npm run build && vitest run test -t \"browser-like via UMD\" --exclude browser-tests",
+    "test:browser:e2e": "npm run build && npx playwright test",
+    "test:browser": "npm run test:browser:vm && npm run test:browser:e2e",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "tsup"
   },
@@ -36,7 +38,10 @@
   "devDependencies": {
     "@kitsy/gutenkit": "0.2.4",
     "@types/node": "^22.10.0",
+    "@playwright/test": "^1.54.1",
     "tsup": "^8.3.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   },

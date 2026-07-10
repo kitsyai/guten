@@ -63,6 +63,15 @@ describe(`gutenkit workflow (browser-like via UMD, baseline ${GUTENKIT_BASELINE_
     expect(typeof runtime.newWithBuiltins).toBe("function");
   });
 
+  it("resolves built-in templates directly in browser runtime", () => {
+    const runtime = loadBrowserRuntime();
+    const engine = runtime.newWithBuiltins();
+    const rendered = engine.render("invoice_bold");
+    expect(rendered.template).toBe("invoice_bold");
+    expect(rendered.parts).toHaveProperty("html");
+    expect(rendered.parts.html.toLowerCase()).toContain("<!doctype html");
+  });
+
   for (const name of namesToTest) {
     it(`renders ${name} template in browser runtime`, () => {
       const manifestPath = join(templatesDir, name, "template.json");

@@ -30,7 +30,8 @@ Usage:
   guten version
 
 Flags:
-  --lib            template name from the library (embedded + ~/.kitsy/guten + --lib-dir)
+  --lib            template name from the library. Builtins are plain names.
+                   Prefix @gutenkit/<name> fetches from the gutenkit repo.
   --lib-dir        extra library directory to search first
   -t, --template   template source, or @path to a file
       --manifest   @path to a full Template JSON {name, renderer, extends, parts:{...}}

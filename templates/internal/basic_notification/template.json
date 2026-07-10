@@ -1,0 +1,11 @@
+{
+  "name": "basic_notification",
+  "kind": "email",
+  "renderer": "liquid",
+  "description": "Minimal, responsive single-card email/text template.",
+  "parts": {
+    "subject": "{{ subject | default: title }}",
+    "text": "Hi {{ name | default: \"there\" }},\n\n{{ body }}\n{% if action_url %}\n{{ action_label | default: \"Open\" }}: {{ action_url }}\n{% endif %}\n{{ brand_name }}",
+    "html": "@html.liquid"
+  }
+}

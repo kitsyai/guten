@@ -20,6 +20,15 @@ function describeName(name: string) {
 }
 
 describe(`gutenkit workflow (node, baseline ${GUTENKIT_BASELINE_VERSION})`, () => {
+  it(`renders built-in invoice_bold in node runtime`, () => {
+    const e = newWithBuiltins();
+    const rendered = e.render("invoice_bold");
+    expect(rendered.template).toBe("invoice_bold");
+    expect(rendered.parts).toBeTruthy();
+    expect(rendered.parts).toHaveProperty("html");
+    expect(rendered.parts.html).toContain("<html");
+  });
+
   for (const name of namesToTest) {
     it(describeName(name), () => {
       const manifestPath = join(templatesDir, name, "template.json");

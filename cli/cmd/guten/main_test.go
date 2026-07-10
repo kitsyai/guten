@@ -30,6 +30,23 @@ func TestRunRenderLayout(t *testing.T) {
 	}
 }
 
+func TestRunRenderBuiltinInvoiceBold(t *testing.T) {
+	out, err := runRender(opts{lib: "invoice_bold", part: "html"})
+	if err != nil {
+		t.Fatalf("runRender: %v", err)
+	}
+	if out == "" {
+		t.Fatal("expected rendered html output")
+	}
+	if !strings.Contains(strings.ToLower(out), "<!doctype html") {
+		preview := out
+		if len(preview) > 200 {
+			preview = preview[:200]
+		}
+		t.Fatalf("expected html template output, got: %s", preview)
+	}
+}
+
 func TestRunExportHTMLAndText(t *testing.T) {
 	dir := t.TempDir()
 	htmlOut := filepath.Join(dir, "out.html")

@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { Engine, newWithBuiltins } from "../src/index.js";
+import { builtinTemplates } from "../src/builtins.generated.js";
 
 describe("guten engine", () => {
+  const builtinNames = builtinTemplates.map((t) => t.name);
+
+  it("supports builtins by direct name", () => {
+    const e = newWithBuiltins();
+    const invoiceBold = e.render("invoice_bold");
+    expect(builtinNames).toContain("invoice_bold");
+    expect(invoiceBold.template).toBe("invoice_bold");
+    expect(invoiceBold.parts).toHaveProperty("html");
+    expect(invoiceBold.parts.html).toContain("<html");
+  });
+
+  it("keeps builtins list stable and includes known presets", () => {
+    expect(builtinNames).toEqual(expect.arrayContaining(["basic_notification", "invoice", "invoice_bold", "invoice_modern", "otp"]));
+  });
+
   it("renders the batteries-included notification", () => {
     const e = newWithBuiltins();
     const r = e.render("basic_notification", {

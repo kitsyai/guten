@@ -34,6 +34,38 @@ func TestRenderBuiltinNotification(t *testing.T) {
 	}
 }
 
+func TestBuiltinsCatalogIncludesInvoiceBold(t *testing.T) {
+	names := map[string]struct{}{}
+	for _, b := range Builtins() {
+		names[b.Name] = struct{}{}
+	}
+	if _, ok := names["invoice_bold"]; !ok {
+		t.Fatalf("builtin invoice_bold not found in catalog")
+	}
+}
+
+func TestRenderBuiltinInvoiceBold(t *testing.T) {
+	e, err := NewWithBuiltins()
+	if err != nil {
+		t.Fatalf("NewWithBuiltins: %v", err)
+	}
+	r, err := e.Render("invoice_bold", nil)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	html := r.Parts[PartHTML]
+	if html == "" {
+		t.Fatalf("invoice_bold html is empty")
+	}
+	if !strings.Contains(html, "<html") {
+		preview := html
+		if len(preview) > 200 {
+			preview = preview[:200]
+		}
+		t.Fatalf("invoice_bold output missing html marker:\n%s", preview)
+	}
+}
+
 func TestSubjectFallsBackToTitle(t *testing.T) {
 	e, _ := NewWithBuiltins()
 	r, err := e.Render("basic_notification", map[string]any{
