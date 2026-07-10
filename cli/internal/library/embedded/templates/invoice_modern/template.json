@@ -1,0 +1,7 @@
+{
+  "name": "invoice_modern",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Modern GST invoice with a bold hero, metric cards, and clean bordered sections.",
+  "parts": { "html": "@html.liquid" }
+}

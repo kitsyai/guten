@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --font: {{ theme.font_family | default: "'Urbanist', Arial, sans-serif" }};
+    --ink: {{ theme.text_color | default: "#111827" }};
+    --dark: {{ theme.dark_color | default: "#111827" }};
+    --accent: {{ theme.accent_color | default: "#b91c1c" }};
+    --soft: {{ theme.soft_color | default: "#fef2f2" }};
+    --rule: {{ theme.rule_color | default: "#fecaca" }};
+  }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm" }}; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 10px/1.45 var(--font); color: var(--ink); }
+  .hero { display: flex; justify-content: space-between; gap: 20px; background: var(--dark); color: #fff; padding: 18px 20px; border-radius: 16px; }
+  .hero h1 { margin: 0; font-size: 28px; line-height: 0.95; }
+  .hero .tag { color: #fca5a5; font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 6px; }
+  .hero .meta { min-width: 240px; }
+  .hero .meta .line, .split .row, .totals .row, .payment .row { display: flex; justify-content: space-between; gap: 14px; }
+  .hero .meta .line { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .section { margin-top: 14px; display: flex; gap: 14px; }
+  .card { flex: 1; border-radius: 14px; border: 1px solid var(--rule); overflow: hidden; }
+  .card .hd { padding: 10px 14px; background: var(--soft); color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px; font-weight: 700; }
+  .card .bd { padding: 12px 14px; }
+  .line { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+  th, td { padding: 9px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; vertical-align: top; }
+  th { background: var(--dark); color: #fff; font-size: 8px; text-transform: uppercase; letter-spacing: 0.12em; }
+  th:first-child, td:first-child { text-align: left; width: 28%; }
+  .desc { font-weight: 700; }
+  .split { margin-top: 16px; display: flex; justify-content: space-between; gap: 18px; }
+  .summary { flex: 1; }
+  .summary .panel { background: var(--soft); border-left: 4px solid var(--accent); padding: 14px 16px; border-radius: 12px; }
+  .totals { width: 280px; background: var(--dark); color: #fff; border-radius: 16px; padding: 14px 16px; }
+  .totals .row { padding: 4px 0; }
+  .totals .grand { margin-top: 8px; padding-top: 10px; border-top: 2px solid #fca5a5; font-size: 12px; font-weight: 700; }
+  .payment { margin-top: 14px; border: 1px dashed var(--accent); border-radius: 14px; padding: 12px 14px; }
+  .payment .row { padding: 4px 0; }
+  .foot { margin-top: 18px; padding-top: 12px; border-top: 2px solid var(--dark); font-size: 9px; color: #4b5563; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <div>
+      <div class="tag">GST compliant billing</div>
+      <h1>{{ invoice.title | default: "Tax Invoice" }}</h1>
+      <div style="margin-top:10px;font-size:16px;font-weight:700;">{{ supplier.legal_name | escape }}</div>
+      {% for l in supplier.address_lines %}<div>{{ l | escape }}</div>{% endfor %}
+    </div>
+    <div class="meta">
+      <div class="line"><span>Invoice No.</span><strong>{{ invoice.number }}</strong></div>
+      <div class="line"><span>Date</span><strong>{{ invoice.date }}</strong></div>
+      <div class="line"><span>Order</span><strong>{{ order.number }}</strong></div>
+      <div class="line"><span>Total</span><strong>{{ totals_summary.total }}</strong></div>
+      <div class="line"><span>Paid</span><strong>{{ totals_summary.paid }}</strong></div>
+      <div class="line"><span>Balance</span><strong>{{ totals_summary.balance }}</strong></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="card">
+      <div class="hd">Bill to</div>
+      <div class="bd">
+        <div class="line">{{ bill_to.name | escape }}</div>
+        {% if bill_to.org %}<div class="line">{{ bill_to.org | escape }}</div>{% endif %}
+        {% for l in bill_to.lines %}<div class="line">{{ l | escape }}</div>{% endfor %}
+        {% if bill_to.gstin %}<div class="line">GSTIN {{ bill_to.gstin }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd">Ship to</div>
+      <div class="bd">
+        <div class="line">{{ ship_to.name | escape }}</div>
+        {% if ship_to.org %}<div class="line">{{ ship_to.org | escape }}</div>{% endif %}
+        {% for l in ship_to.lines %}<div class="line">{{ l | escape }}</div>{% endfor %}
+        {% if ship_to.gstin %}<div class="line">GSTIN {{ ship_to.gstin }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd">Supplier info</div>
+      <div class="bd">
+        <div class="line">GSTIN {{ supplier.gstin }}</div>
+        {% if supplier.pan %}<div class="line">PAN {{ supplier.pan }}</div>{% endif %}
+        {% if supplier.cin %}<div class="line">CIN {{ supplier.cin }}</div>{% endif %}
+        {% if invoice.place_of_supply %}<div class="line">Place {{ invoice.place_of_supply }}</div>{% endif %}
+        {% if invoice.state_code %}<div class="line">State {{ invoice.state_code }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Description</th><th>SAC</th><th>Qty</th><th>Duration</th><th>Listed</th><th>Discount</th><th>Taxable</th><th>GST</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td><div class="desc">{{ it.description | escape }}</div></td>
+        <td>{{ it.sac }}</td><td>{{ it.qty }}</td><td>{{ it.duration }}</td><td>{{ it.listed }}</td><td>{{ it.discount }}</td><td>{{ it.taxable }}</td><td>{{ it.gst }}</td><td>{{ it.total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="split">
+    <div class="summary">
+      <div class="panel">
+        <strong>Payment acknowledgement</strong>
+        {% if payment.acknowledgement %}<div style="margin-top:8px;">{{ payment.acknowledgement | escape }}</div>{% endif %}
+      </div>
+      {% if payment %}
+      <div class="payment">
+        {% for r in payment.rows %}
+        <div class="row"><span>{{ r.lk }}: {{ r.lv }}</span><span>{{ r.rk }}: {{ r.rv }}</span></div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="totals">
+      {% for t in totals %}<div class="row"><span>{{ t.label }}</span><span>{{ t.value }}</span></div>{% endfor %}
+      <div class="row grand"><span>{{ grand_total.label }}</span><span>{{ grand_total.value }}</span></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>{{ footer.terms | escape }}</div>
+    {% if footer.platform %}<div>Service rendered via {{ footer.platform }}.</div>{% endif %}
+    <div>{{ footer.disclaimer }}</div>
+  </div>
+</body>
+</html>

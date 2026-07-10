@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --font: {{ theme.font_family | default: "'Sora', Arial, sans-serif" }};
+    --hero: {{ theme.hero_color | default: "#0f172a" }};
+    --accent: {{ theme.accent_color | default: "#8b5cf6" }};
+    --paper: {{ theme.paper_color | default: "#f8fafc" }};
+    --ink: {{ theme.text_color | default: "#0f172a" }};
+    --rule: {{ theme.rule_color | default: "#cbd5e1" }};
+  }
+  @page { size: {{ theme.page_size | default: "A4" }}; margin: {{ theme.page_margin | default: "14mm" }}; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 10px/1.5 var(--font); color: var(--ink); background: var(--paper); }
+  .hero {
+    background: radial-gradient(circle at top right, rgba(139,92,246,0.35), transparent 34%), var(--hero);
+    color: #fff;
+    border-radius: 20px;
+    padding: 18px 20px;
+  }
+  .hero .row, .stats, .parties, .footline, .totals .r, .pay .r { display: flex; justify-content: space-between; gap: 14px; }
+  .hero .row { align-items: flex-start; }
+  .hero h1 { margin: 0 0 4px; font-size: 24px; }
+  .hero .mini { font-size: 9px; opacity: 0.78; text-transform: uppercase; letter-spacing: 0.14em; }
+  .stamp { min-width: 230px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 12px 14px; }
+  .stamp .line { display: flex; justify-content: space-between; padding: 3px 0; }
+  .stats { margin-top: 14px; }
+  .stat { flex: 1; padding: 12px 14px; background: rgba(255,255,255,0.06); border-radius: 14px; }
+  .stat .k { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.68; }
+  .stat .v { font-size: 18px; font-weight: 700; margin-top: 4px; }
+  .panel { margin-top: 14px; background: #fff; border-radius: 18px; padding: 14px 16px; border: 1px solid var(--rule); }
+  .panel h3 { margin: 0 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .parties .card { flex: 1; background: linear-gradient(180deg, #fff, #f8fbff); border: 1px solid var(--rule); border-radius: 14px; padding: 12px; }
+  .line { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { padding: 9px 7px; border-bottom: 1px solid var(--rule); text-align: right; vertical-align: top; }
+  th { font-size: 8px; color: #475569; text-transform: uppercase; letter-spacing: 0.12em; }
+  th:first-child, td:first-child { text-align: left; width: 28%; }
+  .totals-wrap { display: flex; justify-content: space-between; gap: 18px; margin-top: 14px; }
+  .copy { flex: 1; background: linear-gradient(180deg, #fff, #f5f3ff); border: 1px solid #ddd6fe; border-radius: 16px; padding: 14px 16px; }
+  .totals { width: 290px; background: var(--hero); color: #fff; border-radius: 16px; padding: 14px 16px; }
+  .totals .r { padding: 4px 0; }
+  .totals .grand { margin-top: 8px; padding-top: 10px; border-top: 2px solid rgba(255,255,255,0.28); font-size: 12px; font-weight: 700; }
+  .pay { margin-top: 12px; }
+  .pay .r { padding: 6px 0; border-bottom: 1px dashed var(--rule); }
+  .footer { margin-top: 16px; background: #fff; border-radius: 16px; padding: 12px 16px; border: 1px solid var(--rule); font-size: 9px; color: #475569; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <div class="row">
+      <div>
+        <div class="mini">Billing suite</div>
+        <h1>{{ invoice.title | default: "Tax Invoice" }}</h1>
+        <div style="font-size:16px;font-weight:700;">{{ supplier.legal_name | escape }}</div>
+        {% for l in supplier.address_lines %}<div>{{ l | escape }}</div>{% endfor %}
+      </div>
+      <div class="stamp">
+        <div class="line"><span>Invoice No.</span><strong>{{ invoice.number }}</strong></div>
+        <div class="line"><span>Invoice Date</span><strong>{{ invoice.date }}</strong></div>
+        <div class="line"><span>Order No.</span><strong>{{ order.number }}</strong></div>
+        {% if invoice.document_ref %}<div class="line"><span>Reference</span><strong>{{ invoice.document_ref }}</strong></div>{% endif %}
+        <div class="line"><span>GSTIN</span><strong>{{ supplier.gstin }}</strong></div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">Invoice total</div><div class="v">{{ totals_summary.total }}</div></div>
+      <div class="stat"><div class="k">Amount paid</div><div class="v">{{ totals_summary.paid }}</div></div>
+      <div class="stat"><div class="k">Balance due</div><div class="v">{{ totals_summary.balance }}</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Parties</h3>
+    <div class="parties">
+      <div class="card">
+        <div class="line"><strong>Bill to</strong></div>
+        <div class="line">{{ bill_to.name | escape }}</div>
+        {% if bill_to.org %}<div class="line">{{ bill_to.org | escape }}</div>{% endif %}
+        {% for l in bill_to.lines %}<div class="line">{{ l | escape }}</div>{% endfor %}
+      </div>
+      <div class="card">
+        <div class="line"><strong>Ship to</strong></div>
+        <div class="line">{{ ship_to.name | escape }}</div>
+        {% if ship_to.org %}<div class="line">{{ ship_to.org | escape }}</div>{% endif %}
+        {% for l in ship_to.lines %}<div class="line">{{ l | escape }}</div>{% endfor %}
+      </div>
+      <div class="card">
+        <div class="line"><strong>Tax data</strong></div>
+        {% if supplier.pan %}<div class="line">PAN {{ supplier.pan }}</div>{% endif %}
+        {% if supplier.cin %}<div class="line">CIN {{ supplier.cin }}</div>{% endif %}
+        {% if invoice.place_of_supply %}<div class="line">Place {{ invoice.place_of_supply }}</div>{% endif %}
+        {% if invoice.state_code %}<div class="line">State {{ invoice.state_code }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Line items</h3>
+    <table>
+      <thead>
+        <tr><th>Description</th><th>SAC</th><th>Qty</th><th>Duration</th><th>Listed</th><th>Discount</th><th>Taxable</th><th>GST</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td>{{ it.description | escape }}</td>
+          <td>{{ it.sac }}</td><td>{{ it.qty }}</td><td>{{ it.duration }}</td><td>{{ it.listed }}</td><td>{{ it.discount }}</td><td>{{ it.taxable }}</td><td>{{ it.gst }}</td><td><strong>{{ it.total }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="totals-wrap">
+    <div class="copy">
+      <strong>Payment acknowledgement</strong>
+      {% if payment.acknowledgement %}<div style="margin-top:8px;">{{ payment.acknowledgement | escape }}</div>{% endif %}
+      {% if payment %}
+      <div class="pay">
+        {% for r in payment.rows %}
+        <div class="r"><span>{{ r.lk }}: {{ r.lv }}</span><span>{{ r.rk }}: {{ r.rv }}</span></div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="totals">
+      {% for t in totals %}<div class="r"><span>{{ t.label }}</span><span>{{ t.value }}</span></div>{% endfor %}
+      <div class="r grand"><span>{{ grand_total.label }}</span><span>{{ grand_total.value }}</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>{{ footer.terms | escape }}</div>
+    {% if footer.platform %}<div style="margin-top:4px;">Service rendered via {{ footer.platform }}.</div>{% endif %}
+    <div style="margin-top:4px;">{{ footer.disclaimer }}</div>
+  </div>
+</body>
+</html>

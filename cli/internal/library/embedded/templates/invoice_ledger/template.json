@@ -1,0 +1,7 @@
+{
+  "name": "invoice_ledger",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Ledger-style GST invoice with ruled accounting tables and monospace metadata blocks.",
+  "parts": { "html": "@html.liquid" }
+}

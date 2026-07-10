@@ -1,0 +1,7 @@
+{
+  "name": "invoice_serif",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Editorial GST invoice with serif headlines, fine rules, and premium print styling.",
+  "parts": { "html": "@html.liquid" }
+}

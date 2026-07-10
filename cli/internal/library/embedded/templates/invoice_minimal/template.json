@@ -1,0 +1,7 @@
+{
+  "name": "invoice_minimal",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Minimal GST invoice with quiet typography, broad whitespace, and clean accounting lines.",
+  "parts": { "html": "@html.liquid" }
+}

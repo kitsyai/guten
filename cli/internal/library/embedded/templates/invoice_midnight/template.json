@@ -1,0 +1,7 @@
+{
+  "name": "invoice_midnight",
+  "kind": "document",
+  "renderer": "liquid",
+  "description": "Deep-slate GST invoice with a dark hero header and luminous white content panels.",
+  "parts": { "html": "@html.liquid" }
+}
