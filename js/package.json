@@ -1,7 +1,7 @@
 {
   "name": "@kitsy/guten",
-  "version": "0.2.5",
-  "description": "Multi-format, multi-runtime templating engine (Liquid) â€” Node + browser. The JS runtime of kitsyai/guten.",
+  "version": "0.2.6",
+  "description": "Multi-format, multi-runtime templating engine (Liquid) Ã¢â‚¬â€ Node + browser. The JS runtime of kitsyai/guten.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
