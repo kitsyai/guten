@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>guten UMD Smoke Test</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        margin: 24px;
+      }
+    .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 12px 0 20px;
+      }
+      button {
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: #0f172a;
+        color: #e2e8f0;
+        cursor: pointer;
+      }
+      pre {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 12px;
+        background: #f8fafc;
+        overflow: auto;
+        max-height: 360px;
+      }
+      .preview-wrap {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #ffffff;
+        min-height: 360px;
+      }
+      iframe {
+        width: 100%;
+        height: 360px;
+        border: 0;
+        border-radius: 8px;
+      }
+      .error {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>guten UMD smoke test</h1>
+    <p>
+      Uses local UMD file from <code>js/dist/index.umd.js</code>.
+      If this path is different in your environment, update the <code>src</code> in the script tag below.
+    </p>
+
+    <!-- Update path below if your guten checkout lives elsewhere -->
+    <script src="file:///C:/Users/pkvsi/Wks/kitsy/guten/js/dist/index.umd.js"></script>
+
+    <div class="row">
+      <button id="render-builtin">Render invoice_bold</button>
+      <button id="render-notification">Render basic_notification</button>
+    </div>
+
+    <div>
+      <strong>Template:</strong> <span id="templateName">-</span><br />
+      <strong>Subject:</strong> <span id="subject">-</span>
+    </div>
+    <h3>Rendered Preview</h3>
+    <div class="preview-wrap">
+      <iframe id="previewFrame" title="Guten Rendered HTML"></iframe>
+    </div>
+    <h3>HTML Output</h3>
+    <pre id="htmlOut"></pre>
+    <h3>Text Output</h3>
+    <pre id="textOut"></pre>
+    <h3>Errors</h3>
+    <pre id="errors" class="error"></pre>
+
+    <script>
+      const templateEl = document.getElementById("templateName");
+      const subjectEl = document.getElementById("subject");
+      const htmlOut = document.getElementById("htmlOut");
+      const textOut = document.getElementById("textOut");
+      const errorOut = document.getElementById("errors");
+      const previewFrame = document.getElementById("previewFrame");
+
+      const payload = {
+        title: "Invoice #1001",
+        name: "Asha",
+        body: "Your account was billed successfully.",
+        brand_name: "Acme Labs",
+        action_url: "https://example.test/invoice/1001",
+      };
+
+      function render(templateName) {
+        errorOut.textContent = "";
+        htmlOut.textContent = "";
+        textOut.textContent = "";
+        try {
+          const engine = window.Guten.newWithBuiltins();
+          const rendered = engine.render(templateName, payload);
+
+          templateEl.textContent = rendered.template;
+          subjectEl.textContent = rendered.parts.subject || "(no subject part)";
+          htmlOut.textContent = rendered.parts.html || "(no html part)";
+          textOut.textContent = rendered.parts.text || "(no text part)";
+
+          const html = rendered.parts.html || "";
+          const doc = previewFrame.contentDocument;
+          if (doc) {
+            doc.open();
+            doc.write(html);
+            doc.close();
+          }
+        } catch (e) {
+          errorOut.textContent = String(e && e.message ? e.message : e);
+          templateEl.textContent = "-";
+          subjectEl.textContent = "-";
+        }
+      }
+
+      document.getElementById("render-builtin").addEventListener("click", () => render("invoice_bold"));
+      document.getElementById("render-notification").addEventListener("click", () => render("basic_notification"));
+
+      // auto-render one sample
+      render("invoice_bold");
+    </script>
+  </body>
+</html>
