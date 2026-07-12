@@ -196,6 +196,7 @@
     {% if footer.platform %}<div>Service rendered via {{ footer.platform }}.</div>{% endif %}
     <div class="baseline">
       <span>{{ footer.disclaimer }}</span>
+      <span>{{ footer.page_label | default: "Page 1 of 1" }}</span>
     </div>
   </div>
 
