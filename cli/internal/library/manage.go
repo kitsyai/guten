@@ -105,6 +105,50 @@ func writeJSONFile(path string, v any) error {
 	return os.WriteFile(path, append(b, '\n'), 0o644)
 }
 
+// SaveUserTemplate writes a user-tier template from explicit part contents
+// and sample/theme data — the save step of a browser "duplicate & edit"
+// flow. Unlike NewUserTemplate (which refuses to clobber an existing
+// scaffold), this overwrites any existing user-tier template of the same
+// name, so repeated edits of the same draft are idempotent saves. It always
+// writes to the user tier only; builtins are never touched.
+func SaveUserTemplate(name, renderer string, parts map[string]string, sample, theme map[string]any) (string, error) {
+	if err := validTemplateName(name); err != nil {
+		return "", err
+	}
+	if len(parts) == 0 {
+		return "", fmt.Errorf("template %q has no parts", name)
+	}
+	dir := userTemplateDir(name)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	m := manifest{Name: name, Renderer: renderer, Parts: map[string]string{}}
+	for part, src := range parts {
+		filename := part + ".liquid"
+		m.Parts[part] = "@" + filename
+		if err := os.WriteFile(filepath.Join(dir, filename), []byte(src), 0o644); err != nil {
+			return "", err
+		}
+	}
+	if err := writeJSONFile(filepath.Join(dir, "template.json"), m); err != nil {
+		return "", err
+	}
+	if sample == nil {
+		sample = map[string]any{}
+	}
+	if err := writeJSONFile(filepath.Join(dir, "sample.json"), sample); err != nil {
+		return "", err
+	}
+	if len(theme) > 0 {
+		if err := writeJSONFile(filepath.Join(dir, "theme.json"), theme); err != nil {
+			return "", err
+		}
+	} else {
+		_ = os.Remove(filepath.Join(dir, "theme.json")) // re-save without a theme drops a stale one
+	}
+	return dir, nil
+}
+
 // AddUserTemplate copies a template directory (one containing template.json)
 // into the user tier at ~/.kitsy/guten/user/templates/<name>, where <name> is
 // read from the manifest. It refuses to overwrite an existing user-tier

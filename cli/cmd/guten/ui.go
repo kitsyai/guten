@@ -1,6 +1,8 @@
 package main
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,11 +13,13 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kitsyai/guten/cli/internal/library"
 	pdfconv "github.com/kitsyai/guten/cli/internal/pdf"
 	"github.com/kitsyai/guten/cli/internal/webui"
+	guten "github.com/kitsyai/guten/go"
 )
 
 // heyContractVersion is the app-contract generation this server implements
@@ -80,8 +84,10 @@ func cmdUI(args []string) error {
 	})
 	mux.HandleFunc("GET /api/templates", o.handleTemplates)
 	mux.HandleFunc("GET /api/templates/{name}", o.handleTemplate)
+	mux.HandleFunc("POST /api/templates", o.handleSaveTemplate)
 	mux.HandleFunc("POST /api/render", o.handleRender)
 	mux.HandleFunc("POST /api/export/pdf", o.handleExportPDF)
+	mux.HandleFunc("POST /api/batch", o.handleBatch)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -166,12 +172,100 @@ func (o uiOpts) handleTemplate(w http.ResponseWriter, r *http.Request) {
 	for p := range b.Template.Parts {
 		parts = append(parts, p)
 	}
+	full, err := effectiveParts(b, o.libDir)
+	if err != nil {
+		apiError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
 	writeJSON(w, map[string]any{
-		"name":     b.Template.Name,
-		"renderer": b.Template.Renderer,
-		"parts":    parts,
-		"sample":   b.Sample,
+		"name":        b.Template.Name,
+		"renderer":    b.Template.Renderer,
+		"extends":     b.Template.Extends,
+		"parts":       parts,
+		"partSources": full,
+		"sample":      b.Sample,
+		"theme":       b.Theme,
+		"builtin":     library.IsBuiltin(name),
 	})
+}
+
+// effectiveParts resolves a bundle's parts including anything it extends (a
+// base overlaid, per-part, by the child), so the "duplicate & edit" UI always
+// shows each part's final effective source rather than just this bundle's
+// own overrides.
+func effectiveParts(b library.Bundle, libDir string) (map[string]string, error) {
+	parts := map[string]string{}
+	if b.Template.Extends != "" {
+		base, err := library.LoadBundle(b.Template.Extends, libDir)
+		if err != nil {
+			return nil, fmt.Errorf("load base %q: %w", b.Template.Extends, err)
+		}
+		baseParts, err := effectiveParts(base, libDir)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range baseParts {
+			parts[k] = v
+		}
+	}
+	for k, v := range b.Template.Parts {
+		parts[k] = v
+	}
+	return parts, nil
+}
+
+// saveTemplateRequest is the "duplicate & edit" save step: the browser has
+// edited a builtin's (or any template's) liquid part(s) and/or sample data,
+// and wants it saved into the user tier under a (possibly new) name.
+type saveTemplateRequest struct {
+	Name     string            `json:"name"`
+	Renderer string            `json:"renderer"`
+	Parts    map[string]string `json:"parts"`
+	Sample   json.RawMessage   `json:"sample"`
+	Theme    json.RawMessage   `json:"theme"`
+}
+
+// handleSaveTemplate always writes to the user tier (library.SaveUserTemplate),
+// never to the gutenkit cache or the embedded builtins — builtins stay
+// read-only; this is where edits land, per the workbench spec's guardrail.
+// Saving under a builtin's own name is allowed: it creates a user-tier
+// override that shadows the builtin in the library search order without
+// modifying the builtin itself.
+func (o uiOpts) handleSaveTemplate(w http.ResponseWriter, r *http.Request) {
+	var req saveTemplateRequest
+	r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("parse request: %w", err))
+		return
+	}
+	if strings.TrimSpace(req.Name) == "" {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("name is required"))
+		return
+	}
+	if len(req.Parts) == 0 {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("at least one part is required"))
+		return
+	}
+	var sample map[string]any
+	if len(req.Sample) > 0 {
+		if err := json.Unmarshal(req.Sample, &sample); err != nil {
+			apiError(w, http.StatusBadRequest, fmt.Errorf("parse sample: %w", err))
+			return
+		}
+	}
+	var theme map[string]any
+	if len(req.Theme) > 0 {
+		if err := json.Unmarshal(req.Theme, &theme); err != nil {
+			apiError(w, http.StatusBadRequest, fmt.Errorf("parse theme: %w", err))
+			return
+		}
+	}
+	dir, err := library.SaveUserTemplate(req.Name, req.Renderer, req.Parts, sample, theme)
+	if err != nil {
+		apiError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+	writeJSON(w, map[string]string{"name": req.Name, "dir": dir})
 }
 
 type renderRequest struct {
@@ -250,6 +344,146 @@ func (o uiOpts) handleExportPDF(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", rr.Lib+".pdf"))
 	_, _ = w.Write(pdf)
+}
+
+// batchAPIRequest is the UI's batch-render request: rows pasted/uploaded as
+// raw JSONL or CSV text (format defaults to jsonl), a template selector, and
+// the same --name filename template the CLI's `batch` command takes.
+type batchAPIRequest struct {
+	Lib    string `json:"lib"`
+	Rows   string `json:"rows"`
+	Format string `json:"format"`
+	Name   string `json:"name"`
+}
+
+type batchRowErrorJSON struct {
+	Row     int    `json:"row"`
+	Message string `json:"message"`
+}
+
+// handleBatch renders every row against Lib and streams back a zip: one file
+// per successful row (named by rendering the Name template against that
+// row's data), plus an _errors.json listing any row failures — the run never
+// stops early, exactly like `guten batch`. It only fails the whole request
+// (4xx/5xx, no body) for request-shaped problems or when literally every row
+// failed.
+func (o uiOpts) handleBatch(w http.ResponseWriter, r *http.Request) {
+	var req batchAPIRequest
+	r.Body = http.MaxBytesReader(w, r.Body, 32<<20)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("parse request: %w", err))
+		return
+	}
+	if req.Lib == "" {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("lib is required"))
+		return
+	}
+	if strings.TrimSpace(req.Name) == "" {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("name (filename template) is required"))
+		return
+	}
+
+	var rows []parsedRow
+	var err error
+	if strings.EqualFold(req.Format, "csv") {
+		rows, err = parseCSVRows(req.Rows)
+	} else {
+		rows, err = parseJSONLRows(req.Rows)
+	}
+	if err != nil {
+		apiError(w, http.StatusBadRequest, err)
+		return
+	}
+	if len(rows) == 0 {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("no rows found"))
+		return
+	}
+
+	base := opts{lib: req.Lib, libDir: o.libDir, chrome: o.chrome, renderer: guten.RendererLiquid, part: guten.PartHTML}
+	e, name, baseTheme, baseSample, err := engineAndTemplate(base)
+	if err != nil {
+		apiError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+	nameTpl, err := guten.NewLiquidRenderer().Compile(req.Name)
+	if err != nil {
+		apiError(w, http.StatusBadRequest, fmt.Errorf("parse name template: %w", err))
+		return
+	}
+	part := partForExt(req.Name)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
+	defer cancel()
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	var rowErrs []batchRowErrorJSON
+	written := 0
+	for _, pr := range rows {
+		if pr.err != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: pr.err.Error()})
+			continue
+		}
+		rowJSON, merr := json.Marshal(pr.data)
+		if merr != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: merr.Error()})
+			continue
+		}
+		rowOpts := base
+		rowOpts.data = string(rowJSON)
+		rowOpts.part = part
+		data, derr := renderData(rowOpts, baseTheme, baseSample)
+		if derr != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: derr.Error()})
+			continue
+		}
+		filename, ferr := nameTpl.Render(data)
+		if ferr != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: "render filename: " + ferr.Error()})
+			continue
+		}
+		filename = strings.TrimSpace(filename)
+		if filename == "" {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: "rendered filename is empty"})
+			continue
+		}
+		payload, perr := renderPayload(ctx, e, name, part, data, nil, o.chrome)
+		if perr != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: perr.Error()})
+			continue
+		}
+		fw, cerr := zw.Create(filename)
+		if cerr != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: cerr.Error()})
+			continue
+		}
+		if _, werr := fw.Write(payload); werr != nil {
+			rowErrs = append(rowErrs, batchRowErrorJSON{Row: pr.n, Message: werr.Error()})
+			continue
+		}
+		written++
+	}
+	if len(rowErrs) > 0 {
+		if fw, cerr := zw.Create("_errors.json"); cerr == nil {
+			b, _ := json.MarshalIndent(rowErrs, "", "  ")
+			_, _ = fw.Write(b)
+		}
+	}
+	if cerr := zw.Close(); cerr != nil {
+		apiError(w, http.StatusInternalServerError, cerr)
+		return
+	}
+	if written == 0 {
+		apiError(w, http.StatusUnprocessableEntity, fmt.Errorf("all %d row(s) failed", len(rows)))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", req.Lib+"-batch.zip"))
+	w.Header().Set("X-Batch-Total", strconv.Itoa(len(rows)))
+	w.Header().Set("X-Batch-Written", strconv.Itoa(written))
+	w.Header().Set("X-Batch-Errors", strconv.Itoa(len(rowErrs)))
+	_, _ = w.Write(buf.Bytes())
 }
 
 func openBrowser(u string) {
