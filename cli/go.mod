@@ -2,7 +2,7 @@ module github.com/kitsyai/guten/cli
 
 go 1.26
 
-require github.com/kitsyai/guten/go v0.3.0
+require github.com/kitsyai/guten/go v0.4.0
 
 require (
 	github.com/kitsyai/cnos/packages/go v1.12.0 // indirect
