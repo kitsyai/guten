@@ -34,10 +34,10 @@ type Bundle struct {
 
 type manifest struct {
 	Name        string            `json:"name"`
-	Kind        string            `json:"kind"`
-	Renderer    string            `json:"renderer"`
-	Extends     string            `json:"extends"`
-	Description string            `json:"description"`
+	Kind        string            `json:"kind,omitempty"`
+	Renderer    string            `json:"renderer,omitempty"`
+	Extends     string            `json:"extends,omitempty"`
+	Description string            `json:"description,omitempty"`
 	Parts       map[string]string `json:"parts"`
 }
 
@@ -84,6 +84,22 @@ func baseDir() string {
 func GutenkitDir() string { return filepath.Join(baseDir(), "gutenkit") }
 
 func userDir() string { return filepath.Join(baseDir(), "user") }
+
+// UserDir is the writable user tier root (~/.kitsy/guten/user), where `guten
+// new`, `guten lib add`, and the UI's duplicate-and-edit flow write.
+func UserDir() string { return userDir() }
+
+// IsBuiltin reports whether name is one of the templates embedded in the CLI
+// binary. Builtins are read-only: they are never targeted by lib rm, and any
+// "duplicate & edit" flow must write to the user tier instead.
+func IsBuiltin(name string) bool {
+	for _, entry := range builtinTemplateCatalog {
+		if entry.Name == name {
+			return true
+		}
+	}
+	return false
+}
 
 type root struct {
 	fsys fs.FS
