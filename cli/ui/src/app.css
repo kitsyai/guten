@@ -42,6 +42,14 @@ body { background: var(--bg); color: var(--text); }
 .spacer { flex: 1; }
 .busy { color: var(--muted); font-size: 12px; }
 
+.tabbar { display: flex; gap: 4px; margin-left: 20px; }
+.tab {
+  padding: 5px 12px; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--muted); font-size: 12.5px; cursor: pointer;
+}
+.tab:hover { color: var(--text); }
+.tab.active { background: var(--bg-soft); color: var(--text); border-color: var(--border); }
+
 .body { display: flex; flex: 1; min-height: 0; }
 
 .sidebar {
@@ -109,3 +117,47 @@ body { background: var(--bg); color: var(--text); }
   flex: 1; display: flex; align-items: center; justify-content: center;
   color: var(--muted); font-size: 13px;
 }
+
+.wide-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.select {
+  padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-size: 12px;
+}
+.btn.upload { display: inline-flex; align-items: center; }
+.muted { color: var(--muted); font-size: 12px; }
+.status {
+  padding: 8px 12px; flex: none; font-size: 12px;
+  background: var(--bg-soft); color: var(--text); border-bottom: 1px solid var(--border);
+}
+
+.batch { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.batch-rows { height: 140px; flex: none; }
+.filename-tpl {
+  margin: 10px 12px; padding: 7px 10px; flex: none;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-size: 12.5px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+.row-index {
+  width: 56px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-size: 12px;
+}
+.batch-frame { flex: 1; min-height: 140px; }
+
+.edit { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.edit-row { display: flex; align-items: center; gap: 10px; margin: 10px 12px; flex: none; }
+.edit-label { color: var(--muted); font-size: 12px; }
+.new-name {
+  flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-size: 13px;
+}
+.badge.readonly { margin-left: 8px; }
+.tab-chip {
+  padding: 3px 9px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--bg); color: var(--muted); font-size: 11px; cursor: pointer;
+}
+.tab-chip.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.part-editor { height: 220px; flex: none; }
+.sample-editor { height: 140px; flex: none; }
+.edit-frame { flex: 1; min-height: 120px; }

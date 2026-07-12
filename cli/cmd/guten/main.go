@@ -25,7 +25,10 @@ const usageText = `guten ` + `ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â templating 
 Usage:
   guten render  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] [--part html]
   guten export  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] -o <file> [-o ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦]
-  guten lib     list | show <name> | pull        [--lib-dir <dir>]
+  guten batch   (--lib <name> | -t <src|@file> | --manifest @file) -d @rows.jsonl|@rows.csv
+                --name "<filename template>" -o <dir>
+  guten new     <name> [--from <builtin>] [--lib-dir <dir>]
+  guten lib     list | show <name> | pull | add <dir> | rm <name>  [--lib-dir <dir>]
   guten ui      [--port <n>] [--lib-dir <dir>] [--chrome <path>] [--no-open] [--json]
   guten builtins
   guten version
@@ -53,6 +56,9 @@ Examples:
   guten render -t 'Hi {{ name }}' -d '{"name":"Ada"}'
   guten export -t @invoice.html -d @invoice.json -o invoice.html -o invoice.pdf
   guten export -t @invoice.html -d @invoice.json --set theme.accent=#0ea5e9 --css @brand.css -o out.pdf
+  guten batch --lib invoice -d @rows.jsonl --name "{{ invoice.number }}.pdf" -o out/
+  guten new my-invoice --from invoice
+  guten lib add ./my-template
 `
 
 func main() {
@@ -66,6 +72,10 @@ func main() {
 		err = cmdRender(os.Args[2:])
 	case "export":
 		err = cmdExport(os.Args[2:])
+	case "batch":
+		err = cmdBatch(os.Args[2:])
+	case "new":
+		err = cmdNew(os.Args[2:])
 	case "lib":
 		err = cmdLib(os.Args[2:])
 	case "ui":
@@ -447,32 +457,9 @@ func runExport(o opts) ([]string, error) {
 	written := make([]string, 0, len(o.outs))
 	for _, out := range o.outs {
 		part := partForExt(out)
-		var payload []byte
-		if part == "pdf" {
-			htmlStr, rerr := e.RenderPart(name, guten.PartHTML, data)
-			if rerr != nil {
-				return written, fmt.Errorf("render html for pdf: %w", rerr)
-			}
-			htmlStr, rerr = injectCSS(htmlStr, o.css)
-			if rerr != nil {
-				return written, rerr
-			}
-			b, cerr := pdfconv.NewChrome(o.chrome).ToPDF(context.Background(), []byte(htmlStr))
-			if cerr != nil {
-				return written, cerr
-			}
-			payload = b
-		} else {
-			str, rerr := e.RenderPart(name, part, data)
-			if rerr != nil {
-				return written, rerr
-			}
-			if part == guten.PartHTML {
-				if str, rerr = injectCSS(str, o.css); rerr != nil {
-					return written, rerr
-				}
-			}
-			payload = []byte(str)
+		payload, err := renderPayload(context.Background(), e, name, part, data, o.css, o.chrome)
+		if err != nil {
+			return written, err
 		}
 		if err := os.WriteFile(out, payload, 0o644); err != nil {
 			return written, err
@@ -480,6 +467,37 @@ func runExport(o opts) ([]string, error) {
 		written = append(written, out)
 	}
 	return written, nil
+}
+
+// renderPayload renders a single named part ("pdf" is a pseudo-part: render
+// html, then convert). Shared by runExport and runBatch so batch rendering
+// exercises exactly the same path as `export`.
+func renderPayload(ctx context.Context, e *guten.Engine, name, part string, data map[string]any, css []string, chrome string) ([]byte, error) {
+	if part == "pdf" {
+		htmlStr, err := e.RenderPart(name, guten.PartHTML, data)
+		if err != nil {
+			return nil, fmt.Errorf("render html for pdf: %w", err)
+		}
+		htmlStr, err = injectCSS(htmlStr, css)
+		if err != nil {
+			return nil, err
+		}
+		b, err := pdfconv.NewChrome(chrome).ToPDF(ctx, []byte(htmlStr))
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	}
+	str, err := e.RenderPart(name, part, data)
+	if err != nil {
+		return nil, err
+	}
+	if part == guten.PartHTML {
+		if str, err = injectCSS(str, css); err != nil {
+			return nil, err
+		}
+	}
+	return []byte(str), nil
 }
 
 func cmdExport(args []string) error {
@@ -517,7 +535,7 @@ func cmdLib(args []string) error {
 		pos = append(pos, args[i])
 	}
 	if len(pos) == 0 {
-		return fmt.Errorf("usage: guten lib <list|show <name>|pull> [--lib-dir <dir>]")
+		return fmt.Errorf("usage: guten lib <list|show <name>|pull|add <dir>|rm <name>> [--lib-dir <dir>]")
 	}
 	switch pos[0] {
 	case "list":
@@ -559,7 +577,26 @@ func cmdLib(args []string) error {
 		}
 		fmt.Println("pulled gutenkit to", dir)
 		return nil
+	case "add":
+		if len(pos) < 2 {
+			return fmt.Errorf("usage: guten lib add <dir>")
+		}
+		dir, err := library.AddUserTemplate(pos[1])
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "added %s\n", dir)
+		return nil
+	case "rm":
+		if len(pos) < 2 {
+			return fmt.Errorf("usage: guten lib rm <name>")
+		}
+		if err := library.RemoveUserTemplate(pos[1]); err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "removed %q from the user library\n", pos[1])
+		return nil
 	default:
-		return fmt.Errorf("unknown lib subcommand %q (use list|show|pull)", pos[0])
+		return fmt.Errorf("unknown lib subcommand %q (use list|show|pull|add|rm)", pos[0])
 	}
 }
