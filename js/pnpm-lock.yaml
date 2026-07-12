@@ -347,7 +347,7 @@ packages:
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
   '@kitsy/gutenkit@0.2.6':
-    resolution: {integrity: sha512-0xCDjfTSboWOOnB+kCY/8gN0YKeWtKCPbwEXdycT73yoeYj0CMHT0FBNYWEw3+qPco3Oi5iLHriwtOib3pdgXg==}
+    resolution: {integrity: sha512-5MtbJllpmCLSAqUZG3+ctBRDB3ILr6Cx+T1XtKGEDMIqoaPii0Y4otnvqlFCdJXP5kZu6FB/EtvoTs5eByj5Ag==}
 
   '@playwright/test@1.61.1':
     resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
