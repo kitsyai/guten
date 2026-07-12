@@ -3,7 +3,7 @@ id: TASK-USER-LIBR-MANA-LIB-1
 short_id: 2326f2c4071b
 title: "User library management: lib add/rm + guten new"
 type: feature
-status: in_review
+status: done
 created: 2026-07-12
 updated: 2026-07-12
 aliases: []

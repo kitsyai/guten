@@ -3,7 +3,7 @@ id: TASK-GUTE-BATC-CSV-JSON-1
 short_id: fba4753b9189
 title: "guten batch: CSV/JSONL to many documents"
 type: feature
-status: in_review
+status: done
 created: 2026-07-12
 updated: 2026-07-12
 aliases: []
