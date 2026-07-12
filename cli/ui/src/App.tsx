@@ -5,8 +5,11 @@ import {
   getVersion,
   listTemplates,
   render,
+  type Bundle,
   type TemplateEntry,
 } from "./api";
+import BatchPanel from "./BatchPanel";
+import EditPanel from "./EditPanel";
 
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -17,24 +20,32 @@ function download(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+type Tab = "render" | "batch" | "edit";
+
 export default function App() {
   const [version, setVersion] = useState("");
   const [templates, setTemplates] = useState<TemplateEntry[]>([]);
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<string>("");
+  const [bundle, setBundle] = useState<Bundle | null>(null);
   const [dataText, setDataText] = useState("{}");
   const [html, setHtml] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<Tab>("render");
   const dataRef = useRef(dataText);
   dataRef.current = dataText;
 
-  useEffect(() => {
-    getVersion().then((v) => setVersion(v.version)).catch(() => {});
-    listTemplates()
+  const refreshTemplates = useCallback(() => {
+    return listTemplates()
       .then(setTemplates)
       .catch((e) => setError(String(e)));
   }, []);
+
+  useEffect(() => {
+    getVersion().then((v) => setVersion(v.version)).catch(() => {});
+    void refreshTemplates();
+  }, [refreshTemplates]);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -68,8 +79,9 @@ export default function App() {
       setSelected(name);
       setError("");
       try {
-        const bundle = await getTemplate(name);
-        const sample = JSON.stringify(bundle.sample ?? {}, null, 2);
+        const b = await getTemplate(name);
+        setBundle(b);
+        const sample = JSON.stringify(b.sample ?? {}, null, 2);
         setDataText(sample);
         await doRender(name, sample);
       } catch (e) {
@@ -77,6 +89,15 @@ export default function App() {
       }
     },
     [doRender],
+  );
+
+  const onSaved = useCallback(
+    async (name: string) => {
+      await refreshTemplates();
+      await selectTemplate(name);
+      setTab("render");
+    },
+    [refreshTemplates, selectTemplate],
   );
 
   const onDownloadPDF = useCallback(async () => {
@@ -113,6 +134,17 @@ export default function App() {
       <header className="topbar">
         <span className="wordmark">guten</span>
         <span className="version">{version && `v${version}`}</span>
+        <nav className="tabbar">
+          <button className={tab === "render" ? "tab active" : "tab"} onClick={() => setTab("render")}>
+            Render
+          </button>
+          <button className={tab === "batch" ? "tab active" : "tab"} onClick={() => setTab("batch")}>
+            Batch
+          </button>
+          <button className={tab === "edit" ? "tab active" : "tab"} onClick={() => setTab("edit")}>
+            Duplicate &amp; edit
+          </button>
+        </nav>
         <span className="spacer" />
         {busy && <span className="busy">working…</span>}
       </header>
@@ -142,48 +174,68 @@ export default function App() {
           </ul>
         </aside>
 
-        <section className="editor">
-          <div className="pane-head">
-            <span>Data</span>
-            <span className="spacer" />
-            <button
-              className="btn primary"
-              disabled={!selected || busy}
-              onClick={() => void doRender(selected, dataText)}
-              title="Ctrl+Enter"
-            >
-              Render
-            </button>
-            <button className="btn" disabled={!selected || busy} onClick={() => void onDownloadPDF()}>
-              PDF
-            </button>
-            <button className="btn" disabled={!html} onClick={onDownloadHTML}>
-              HTML
-            </button>
-          </div>
-          <textarea
-            className="data"
-            spellCheck={false}
-            value={dataText}
-            onChange={(e) => setDataText(e.target.value)}
-            onKeyDown={onEditorKeyDown}
-            placeholder={selected ? "{ }" : "Pick a template on the left"}
-          />
-          {error && <pre className="error">{error}</pre>}
-        </section>
+        {tab === "render" && (
+          <>
+            <section className="editor">
+              <div className="pane-head">
+                <span>Data</span>
+                <span className="spacer" />
+                <button
+                  className="btn primary"
+                  disabled={!selected || busy}
+                  onClick={() => void doRender(selected, dataText)}
+                  title="Ctrl+Enter"
+                >
+                  Render
+                </button>
+                <button className="btn" disabled={!selected || busy} onClick={() => void onDownloadPDF()}>
+                  PDF
+                </button>
+                <button className="btn" disabled={!html} onClick={onDownloadHTML}>
+                  HTML
+                </button>
+              </div>
+              <textarea
+                className="data"
+                spellCheck={false}
+                value={dataText}
+                onChange={(e) => setDataText(e.target.value)}
+                onKeyDown={onEditorKeyDown}
+                placeholder={selected ? "{ }" : "Pick a template on the left"}
+              />
+              {error && <pre className="error">{error}</pre>}
+            </section>
 
-        <section className="preview">
-          <div className="pane-head">
-            <span>Preview</span>
-          </div>
-          {html ? (
-            <iframe className="frame" title="preview" sandbox="" srcDoc={html} />
-          ) : (
-            <div className="placeholder">
-              Select a template to render its sample data.
-            </div>
-          )}
-        </section>
+            <section className="preview">
+              <div className="pane-head">
+                <span>Preview</span>
+              </div>
+              {html ? (
+                <iframe className="frame" title="preview" sandbox="" srcDoc={html} />
+              ) : (
+                <div className="placeholder">
+                  Select a template to render its sample data.
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        {tab === "batch" && (
+          <section className="wide-panel">
+            {selected ? (
+              <BatchPanel selected={selected} />
+            ) : (
+              <div className="placeholder">Pick a template on the left, then paste or upload rows.</div>
+            )}
+          </section>
+        )}
+
+        {tab === "edit" && (
+          <section className="wide-panel">
+            <EditPanel bundle={bundle} onSaved={onSaved} />
+          </section>
+        )}
       </div>
     </div>
   );
