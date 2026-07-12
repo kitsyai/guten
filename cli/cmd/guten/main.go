@@ -26,6 +26,7 @@ Usage:
   guten render  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] [--part html]
   guten export  (--lib <name> | -t <src|@file> | --manifest @file) [-d <json|@file>] -o <file> [-o ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦]
   guten lib     list | show <name> | pull        [--lib-dir <dir>]
+  guten ui      [--port <n>] [--lib-dir <dir>] [--chrome <path>] [--no-open] [--json]
   guten builtins
   guten version
 
@@ -67,6 +68,8 @@ func main() {
 		err = cmdExport(os.Args[2:])
 	case "lib":
 		err = cmdLib(os.Args[2:])
+	case "ui":
+		err = cmdUI(os.Args[2:])
 	case "builtins":
 		err = cmdBuiltins()
 	case "version", "--version", "-v":

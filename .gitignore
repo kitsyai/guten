@@ -1,5 +1,6 @@
 .coop/logs/
 .coop/tmp/
+cli/ui/node_modules/
 .cnos/env/.env
 .cnos/env/.env.*
 !.cnos/env/.env.example
