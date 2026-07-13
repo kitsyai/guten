@@ -5,7 +5,7 @@ title: "UI v2 polish: parts, theme panel, resizable panes"
 type: feature
 status: todo
 created: 2026-07-12
-updated: 2026-07-12
+updated: 2026-07-13
 aliases: []
 priority: p2
 track: workbench
@@ -19,4 +19,9 @@ origin:
   authority_refs:
     - docs/feature-set-v1.md
   derived_refs: []
+comments:
+  - at: 2026-07-13T11:10:53.989Z
+    author: pkvsi
+    body: Parked 2026-07-13 — ecosystem focus shifted to hey distribution. See
+      AGENTS.md; resume from the workbench track.
 ---
